@@ -363,25 +363,5 @@ p { line-height:1.7; }
   });
   document.getElementById('prog').style.width = (1 / total * 100) + '%';
 </script>
-<div id="rotate-hint">
-  <div>
-    <div style="font-size:44px; margin-bottom:16px;">📱 ↻</div>
-    <div style="font-size:19px; font-weight:700; line-height:1.9;">スマートフォンは<br><span style="color:#E39440;">横向き</span>にすると<br>スライドが大きく表示されます</div>
-  </div>
-</div>
-<style>
-#rotate-hint { display:none; }
-@media (max-width:820px) and (orientation:portrait) {
-  #rotate-hint { display:flex; position:fixed; inset:0; z-index:99999; background:rgba(31,29,26,0.94); color:#F5F0EB; align-items:center; justify-content:center; text-align:center; padding:40px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
-}
-</style>
-<style>
-/* 画面サイズに自動フィット（スマホ・PC共通） */
-.slide { width:1920px !important; height:1080px !important; position:fixed !important; top:50% !important; left:50% !important; transform:translate(-50%,-50%) scale(var(--fit,1)) !important; transform-origin:center center; }
-@media print { .slide, .slide.active { transform:none !important; position:relative !important; top:auto !important; left:auto !important; } }
-</style>
-<script>
-(function(){ function fit(){ var s=Math.min(window.innerWidth/1920, window.innerHeight/1080); document.documentElement.style.setProperty('--fit', s); } window.addEventListener('resize',fit); window.addEventListener('orientationchange',fit); fit(); })();
-</script>
 </body>
 </html>
