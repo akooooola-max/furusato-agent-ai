@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>エージェントAI 第1回｜「IT導入」から「AI職員の雇用」へ</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --orange:     #D97757; /* Claude ブランドオレンジ（塗り・線用） */
+  --orange-lt:  #C15F3C; /* 文字用の読みやすいオレンジ */
+  --orange-dk:  #A8481F;
+  --amber:      #E39440;
+  --bg:         #FFFFFF;
+  --bg2:        #FAF9F5; /* Claude アイボリー */
+  --surface:    rgba(217,119,87,0.07);
+  --border:     rgba(217,119,87,0.32);
+  --border-lt:  #E8E4DD;
+  --text:       #29261F;
+  --muted:      #6E6759;
+  --muted2:     #9C948A;
+  --mono:       'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+body {
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  user-select: none;
+}
+
+/* ======== SLIDE BASE ======== */
+.slide {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  padding: 52px 72px 72px;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.slide.active { display: flex; animation: fadeUp .35s ease; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 背景バリエーション */
+.bg-1 { background: radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background: var(--bg2); }
+.bg-3 { background: radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+
+/* 左アクセントライン */
+.slide::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%);
+  opacity: .9;
+}
+
+/* スライド番号 */
+.slide-num {
+  position: absolute;
+  bottom: 28px; right: 52px;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--muted2);
+  letter-spacing: 2px;
+}
+
+/* ======== TYPOGRAPHY ======== */
+h1 { font-size: 58px; font-weight: 800; line-height: 1.15; letter-spacing: -.02em; }
+h2 { font-size: 38px; font-weight: 700; line-height: 1.2; margin-bottom: 32px; letter-spacing: -.01em; }
+h3 { font-size: 20px; font-weight: 600; line-height: 1.4; }
+p  { line-height: 1.7; }
+
+.accent  { color: var(--orange-lt); }
+.amber   { color: #A16207; }
+.muted   { color: var(--muted); }
+
+/* ======== SECTION LABEL（ターミナル風プロンプト） ======== */
+.section-label {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  font-family: var(--mono);
+  color: var(--orange-lt);
+  margin-bottom: 16px;
+}
+.section-label::before {
+  content: '❯';
+  color: var(--orange);
+  font-weight: 800;
+}
+
+/* ======== TAG ======== */
+.tag {
+  display: inline-block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--orange-dk);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  margin: 4px 3px;
+}
+
+/* ======== CARD ======== */
+.card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-lt);
+  border-radius: 14px;
+  padding: 24px 20px;
+  box-shadow: 0 1px 3px rgba(41,38,31,0.05);
+}
+.card.o  { border-left: 3px solid var(--orange); }
+.card.a  { border-left: 3px solid var(--amber); }
+.card.g  { border-left: 3px solid #16A34A; }
+.card.r  { border-left: 3px solid #DC2626; }
+.card.w  { border-left: 3px solid var(--muted2); }
+
+.card .icon { font-size: 28px; margin-bottom: 10px; }
+.card .label {
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: var(--mono);
+  color: var(--muted2); margin-bottom: 6px;
+}
+.card h3 { font-size: 18px; margin-bottom: 8px; }
+.card p  { font-size: 14px; color: var(--muted); }
+
+/* ======== GRIDS ======== */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g-50-50 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+
+/* ======== LIST ======== */
+.checklist { list-style: none; }
+.checklist li {
+  font-size: 17px;
+  color: var(--text);
+  padding: 10px 0 10px 28px;
+  border-bottom: 1px solid var(--border-lt);
+  position: relative;
+  line-height: 1.5;
+}
+.checklist li::before { content: '✓'; position: absolute; left: 0; color: var(--orange); font-weight: 700; }
+
+/* ======== STEP ======== */
+.step {
+  display: flex; align-items: flex-start; gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border-lt);
+}
+.step:last-child { border-bottom: none; }
+.step-num {
+  min-width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--orange), var(--amber));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+}
+.step h3 { font-size: 19px; margin-bottom: 5px; }
+.step p  { font-size: 14px; color: var(--muted); }
+
+/* ======== HIGHLIGHT BOX ======== */
+.hl {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 22px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
+}
+.hl.center { text-align: center; }
+
+/* ======== VS BOX ======== */
+.vs-wrap { display: grid; grid-template-columns: 1fr 48px 1fr; gap: 0; align-items: stretch; margin-top: 8px; }
+.vs-box {
+  background: #FFFFFF;
+  border: 1px solid var(--border-lt);
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(41,38,31,0.05);
+}
+.vs-box.highlight-box {
+  background: var(--surface);
+  border-color: var(--orange);
+}
+.vs-box .vs-title { font-size: 11px; letter-spacing: 3px; font-family: var(--mono); color: var(--muted2); margin-bottom: 10px; }
+.vs-box h3 { font-size: 24px; font-weight: 700; margin-bottom: 14px; }
+.vs-box p  { font-size: 14px; color: var(--muted); line-height: 1.7; }
+.vs-divider { display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: var(--muted2); }
+
+/* ======== FLOW（縦の流れ図） ======== */
+.flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.flow-item {
+  background: #FFFFFF;
+  border: 1px solid var(--border-lt);
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 420px;
+  box-shadow: 0 1px 3px rgba(41,38,31,0.05);
+}
+.flow-item.hot {
+  background: var(--surface);
+  border-color: var(--orange);
+}
+.flow-item .who {
+  font-size: 11px; letter-spacing: 2px; color: var(--muted2);
+  font-family: var(--mono);
+  display: block; margin-bottom: 2px;
+}
+.flow-item.hot .who { color: var(--orange-lt); }
+.flow-arrow { font-size: 18px; color: var(--muted2); padding: 6px 0; }
+
+/* ======== DAY PLAN ======== */
+.day-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border-lt);
+}
+.day-row:last-child { border-bottom: none; }
+.day-badge {
+  min-width: 56px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  text-align: center;
+  padding: 5px 0;
+  font-size: 12px; font-weight: 700; color: var(--orange-dk);
+  flex-shrink: 0;
+}
+.day-row p { font-size: 15px; color: var(--text); }
+
+/* ======== WARNING ======== */
+.warn {
+  background: rgba(220,38,38,0.06);
+  border: 1px solid rgba(220,38,38,0.25);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 14px; color: #B91C1C;
+}
+
+/* ======== KW CARD ======== */
+.kw {
+  background: #FFFFFF;
+  border: 1px solid var(--border-lt);
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(41,38,31,0.05);
+}
+.kw .kw-num { font-size: 10px; color: var(--orange-lt); font-weight: 700; letter-spacing: 1px; font-family: var(--mono); margin-bottom: 4px; }
+.kw .kw-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.kw .kw-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ======== FOOTER LINE ======== */
+.footer-line {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%);
+  opacity: .6;
+}
+
+/* ======== CALLOUT ======== */
+.callout {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(227,148,64,0.08);
+  border: 1px solid rgba(227,148,64,0.35);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 14px; color: var(--text); line-height: 1.6;
+}
+.callout .ci { font-size: 18px; flex-shrink: 0; }
+
+/* ======== TERMINAL（Claude Code 風） ======== */
+.terminal {
+  background: #1F1D1A;
+  border-radius: 14px;
+  padding: 18px 22px 20px;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.9;
+  color: #E8E4DD;
+  box-shadow: 0 8px 24px rgba(41,38,31,0.18);
+}
+.terminal .dots { display: flex; gap: 7px; margin-bottom: 12px; }
+.terminal .dots span { width: 11px; height: 11px; border-radius: 50%; }
+.terminal .dots span:nth-child(1) { background: #FF5F57; }
+.terminal .dots span:nth-child(2) { background: #FEBC2E; }
+.terminal .dots span:nth-child(3) { background: #28C840; }
+.terminal .tp { color: #D97757; font-weight: 700; }
+.terminal .tc { color: #9C948A; }
+.terminal .tg { color: #7BC97E; }
+
+/* ======== NAV ======== */
+.nav {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 10px; align-items: center;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-lt);
+  border-radius: 50px;
+  padding: 8px 18px;
+  box-shadow: 0 4px 16px rgba(41,38,31,0.10);
+  z-index: 100;
+}
+.nav button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--orange-dk);
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  cursor: pointer; font-size: 15px;
+  transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.nav button:hover { background: var(--orange); color: #fff; border-color: var(--orange); }
+.nav-cnt { font-size: 13px; font-family: var(--mono); color: var(--muted); min-width: 56px; text-align: center; }
+
+/* ======== PROGRESS ======== */
+.progress {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--orange), var(--amber));
+  transition: width .3s ease; z-index: 200;
+}
+
+/* ======== PRINT ======== */
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    width: 1920px; height: 1080px;
+    overflow: visible;
+    background: #FFFFFF !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .nav, .progress { display: none !important; }
+
+  .slide {
+    display: none !important;
+  }
+
+  .slide.active {
+    display: flex !important;
+    width: 1920px !important;
+    height: 1080px !important;
+    padding: 72px 108px 100px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    animation: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* ======== BIG NUMBER ======== */
+.big { font-size: 72px; font-weight: 900; color: var(--orange-lt); line-height: 1.2; }
+</style>
+</head>
+<body>
+
+<div class="progress" id="prog"></div>
+
+<!-- ① タイトル -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="section-label">エージェントAI 第1回 — 核心テーマ</div>
+      <h1>Claude Code を<br>「IT導入」から<br><span class="accent">「AI職員の雇用」</span>へ</h1>
+      <p style="font-size:20px; color:var(--muted); margin-top:16px; line-height:1.7;">
+        経営者の道具としての全体像をつかむ
+      </p>
+      <div style="margin-top:28px;">
+        <span class="tag">社会福祉法人ふるさと　北島 淳朗 理事長</span>
+        <span class="tag">ポスト・ヒューマン・ジャパン株式会社</span>
+      </div>
+    </div>
+    <div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">❯</span> claude<br>
+        <span class="tc">✻ Welcome to Claude Code!</span><br><br>
+        <span class="tp">&gt;</span> 今日からAI職員として働いてください<br><br>
+        <span class="tg">⏺</span> 承知しました。まずはどの業務からお任せいただけますか？
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 今日の全体像 -->
+<div class="slide bg-2">
+  <div class="section-label">今日の全体像</div>
+  <h2>第1回で持ち帰る<span class="accent">14のこと</span></h2>
+  <div class="g3" style="gap:12px; margin-bottom:12px;">
+    <div class="kw">
+      <div class="kw-num">はじめに</div>
+      <div class="kw-title">❓ そもそもClaude Codeとは</div>
+      <div class="kw-desc">「ChatGPTと何が違う？」——最初の不安を解消。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">準備</div>
+      <div class="kw-title">🖥️ 3つの使い方と始め方</div>
+      <div class="kw-desc">デスクトップ版から。インストールとプラン選び。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">実践</div>
+      <div class="kw-title">🖱️ 実際に触ってみる</div>
+      <div class="kw-desc">セッション・プランモード・最初のデモ。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">管理</div>
+      <div class="kw-title">🗂️ セッションとコンテキスト</div>
+      <div class="kw-desc">使い捨ての感覚と、引き継ぎの書き方。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">つまずき対策</div>
+      <div class="kw-title">🧰 最初に効くテクニック</div>
+      <div class="kw-desc">音声入力・「わかりません」・スクショの渡し方。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">モデル</div>
+      <div class="kw-title">🤖 モデルの使い分け</div>
+      <div class="kw-desc">普段はSonnet、考える仕事はOpus。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">MD</div>
+      <div class="kw-title">📘 自分専用に育てるMD</div>
+      <div class="kw-desc">共通とプロジェクトの2種類。5行から。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">コマンド・スキル</div>
+      <div class="kw-title">⚡ 「やっておいて」の仕組み</div>
+      <div class="kw-desc">同じ作業はコマンド、判断が要ればスキル。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">使い分け</div>
+      <div class="kw-title">🧭 Chat・Co-Act・Code</div>
+      <div class="kw-desc">迷ったらCode。Dispatchは外出先から。</div>
+    </div>
+    <div class="kw" style="grid-column:1/-1; background:var(--surface); border-color:var(--border);">
+      <div class="kw-num" style="color:var(--orange-lt);">仕上げ → 経営へ</div>
+      <div class="kw-title">🏁 自分専用のAI秘書に仕上げ、法人全体の視点へ</div>
+      <div class="kw-desc">データベース連携で「もう一人の自分」に育てる。ここまでが使い方の教科書。そして下のSTEP1〜4で、経営者として法人全体でどう使うかへ。</div>
+    </div>
+  </div>
+  <div class="g2" style="gap:12px;">
+    <div class="kw">
+      <div class="kw-num">STEP 1</div>
+      <div class="kw-title">💡 発想を変える</div>
+      <div class="kw-desc">「ITツールを入れる」ではなく「優秀なスタッフを雇う」。この転換が出発点。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">STEP 2</div>
+      <div class="kw-title">🔍 違いを知る</div>
+      <div class="kw-desc">対話型AIとエージェントAIは何が違うのか。「自分で動くAI」の意味を理解。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">STEP 3</div>
+      <div class="kw-title">⚖️ 任せ方を知る</div>
+      <div class="kw-desc">知恵（作業）と智慧（判断）の切り分け。法人全体をつなぐ三層戦略。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">STEP 4</div>
+      <div class="kw-title">🤝 雇い方を知る</div>
+      <div class="kw-desc">AI職員を「採用・育成・管理」する5つのステップ。人材マネジメントの発想で。</div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ よくある3つの不安 -->
+<div class="slide bg-3">
+  <div class="section-label">そもそも編 ①</div>
+  <h2>最初はみんな、<span class="accent">同じ不安</span>を持っています</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="card w">
+      <div class="icon">🤔</div>
+      <h3>「ChatGPTと<br>何が違うの？」</h3>
+      <p>すでにチャットAIを使っている人ほど、違いがわからない。実は根本的に違います（この後説明します）。</p>
+    </div>
+    <div class="card w">
+      <div class="icon">😰</div>
+      <h3>「コードって名前が<br>ついてるけど難しそう」</h3>
+      <p>名前のせいでエンジニア専用に見える。実際はプログラミング知識ゼロで使えます。</p>
+    </div>
+    <div class="card w">
+      <div class="icon">🙅</div>
+      <h3>「自分にはまだ<br>関係ないかも」</h3>
+      <p>PCで仕事をしている人なら全員に関係があります。むしろ非エンジニアほど効果が大きい。</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:24px;">
+    <span class="ci">💬</span>
+    <span>講師も最初は同じでした。AIを使いこなしていたわけではなく、<strong>触りながら少しずつ覚えてきたタイプ</strong>です。だからこそ、どこでつまずくかがわかります。この講座は初心者の方でもわかるように、順番に進めます。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ AIには2つのタイプがある -->
+<div class="slide bg-1">
+  <div class="section-label">そもそも編 ②</div>
+  <h2>AIには<span class="accent">2つのタイプ</span>がある — 動く「場所」が違う</h2>
+  <div class="vs-wrap">
+    <div class="vs-box">
+      <div class="vs-title">これまでのAI</div>
+      <h3>🌐 ブラウザの中のAI</h3>
+      <p style="margin-bottom:12px;">ChatGPT・Gemini・Claude（Web版）など。<br>チャット画面に質問を入れると答えが返ってくる。</p>
+      <p>
+        文章作成・要約・アイデア出し・調べもの——十分すごい。<br><br>
+        ただし、返ってきた答えを<strong style="color:#B91C1C;">コピーして、貼り付けて、整えて、使うのは自分</strong>。
+      </p>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">Claude Code</div>
+      <h3>💻 PCの中で動くAI</h3>
+      <p style="margin-bottom:12px;">自分のパソコンの中に入って、<strong style="color:var(--text);">実際の作業まで</strong>手伝ってくれる。</p>
+      <p>
+        「この記事を作って」<br>
+        「このファイルを整理して」<br>
+        「いつもの形でまとめて」<br><br>
+        <strong style="color:var(--orange-lt);">→ PCの中で実際に進めてくれる</strong>
+      </p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ コンサル兼秘書 -->
+<div class="slide bg-2">
+  <div class="section-label">そもそも編 ③</div>
+  <h2>ただのAIではなく、<span class="accent">「コンサル兼秘書」</span>という存在</h2>
+  <div class="g2" style="margin-bottom:20px;">
+    <div class="card w">
+      <div class="label">これまでのAI = コンサルタント</div>
+      <h3>💬 「こうした方がいいですよ」</h3>
+      <p style="margin-top:6px;">構成や文章を提案してくれる。でも、実際に手を動かすのは自分。</p>
+    </div>
+    <div class="card o">
+      <div class="label">Claude Code = コンサル兼秘書</div>
+      <h3>🤲 「では、その作業もやっておきますね」</h3>
+      <p style="margin-top:6px;">提案のうえで、作業まで進めてくれる。<strong style="color:var(--orange-lt);">PC作業に強い右腕</strong>です。</p>
+    </div>
+  </div>
+  <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">たとえば、こんな作業を任せられます（SNS運用・コンテンツ制作とも相性◎）</p>
+  <div style="margin-bottom:16px;">
+    <span class="tag">リール動画の台本</span>
+    <span class="tag">note・ブログ記事</span>
+    <span class="tag">投稿文の作成</span>
+    <span class="tag">録画データの整理</span>
+    <span class="tag">会員サイト用のまとめ</span>
+    <span class="tag">告知文の作成</span>
+    <span class="tag">資料の下書き</span>
+    <span class="tag">データの整理</span>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    「いつもの形でまとめて」「前回と同じ形式で」——<span class="accent">毎回同じ作業をしている人ほど効きます</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ エンジニア専用ではない -->
+<div class="slide bg-3">
+  <div class="section-label">そもそも編 ④</div>
+  <h2>「コード」とつくけど、<span class="accent">エンジニア専用ではない</span></h2>
+  <div class="g-50-50">
+    <div>
+      <div class="warn" style="margin-bottom:16px;">
+        ✗ よくある誤解：「プログラマーが使うものでしょ？」
+      </div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9;">
+        そんなことはありません。<br><br>
+        講師自身もエンジニアではなく、コードをバリバリ書ける人間でもありません。<strong style="color:var(--text);">それでも使えています。</strong><br><br>
+        Claude Codeはプログラミングだけのためのツールではないのです。
+      </p>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ こういう人ほど使えます</p>
+      <ul class="checklist" style="margin-bottom:20px;">
+        <li style="font-size:15px;">PCで仕事をしている人</li>
+        <li style="font-size:15px;">文章を書く人・資料を作る人</li>
+        <li style="font-size:15px;">SNSを運用している人</li>
+        <li style="font-size:15px;">データを整理する人</li>
+        <li style="font-size:15px;">毎回同じ作業をしている人</li>
+      </ul>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        大事なのはコードが書けるかどうかではなく、<br>
+        <span class="accent">「何をやってほしいか」を伝えられるか</span>。ここだけです。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ 正しい使い方が大事 -->
+<div class="slide bg-1">
+  <div class="section-label">そもそも編 ⑤</div>
+  <h2>便利だからこそ、<span class="accent">正しい使い方</span>が大事</h2>
+  <p style="font-size:16px; color:var(--muted); line-height:1.8; margin-bottom:24px;">
+    PCの中で動くということは、ファイルや作業に関わる<strong style="color:var(--text);">権限も大きくなる</strong>ということ。だからこそ、最初に押さえるポイントが4つあります。
+  </p>
+  <div class="g2" style="gap:14px; margin-bottom:20px;">
+    <div class="kw">
+      <div class="kw-num">POINT 1</div>
+      <div class="kw-title">🎚️ どこまで任せるか</div>
+      <div class="kw-desc">全部お任せではなく、任せる範囲を自分で決める</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">POINT 2</div>
+      <div class="kw-title">📁 どのファイルを触らせるか</div>
+      <div class="kw-desc">作業用フォルダを決めて、その中だけで働いてもらう</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">POINT 3</div>
+      <div class="kw-title">🗣️ どんな指示を出すか</div>
+      <div class="kw-desc">曖昧な指示ではなく、ゴールをはっきり伝える</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">POINT 4</div>
+      <div class="kw-title">✅ 確認しながら進める</div>
+      <div class="kw-desc">大事な操作の前には確認を入れる設定で使う</div>
+    </div>
+  </div>
+  <div class="callout">
+    <span class="ci">😊</span>
+    <span>怖がる必要はありません。<strong>正しい順番で覚えることが大事</strong>なだけです。この4つは、後ほど「実践編」で実際の画面操作に落とし込みます。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ なぜ今学ぶべきか -->
+<div class="slide bg-2">
+  <div class="section-label">そもそも編 ⑥ — なぜ今か</div>
+  <h2>仕事を奪うのはAIではなく、<span class="accent">「AIを使える人」</span></h2>
+  <div class="g2" style="margin-bottom:20px;">
+    <div class="card o">
+      <div class="label">AIを使える人</div>
+      <h3>⏱️ 2時間の作業を短時間で終わらせる</h3>
+      <p style="margin-top:6px;">空いた時間で別の仕事をしたり、学んだり、提案の質を上げたりできる。差はここから生まれる。</p>
+    </div>
+    <div class="card w">
+      <div class="label">AIを使わない人</div>
+      <h3>🐢 今まで通りのやり方で作業を続ける</h3>
+      <p style="margin-top:6px;">この差は少しずつではなく、<strong>一気に</strong>広がっていく。</p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-bottom:16px; font-size:16px; font-weight:600;">
+    完璧に使いこなす必要はありません。<span class="accent">まずは知る → 次に触る → 少しずつ慣れる</span>。これで十分。
+  </div>
+  <div class="callout">
+    <span class="ci">📱</span>
+    <span>知らないまま避けるのが一番もったいない。スマホが出てきたときに、ずっとガラケーだけを使い続けるようなものです。<strong>使うかどうかを決めるのは、一度触ってみたあとで大丈夫</strong>。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ Claudeには3つの使い方がある -->
+<div class="slide bg-3">
+  <div class="section-label">準備編 ① — 3つの使い方</div>
+  <h2>Claudeには<span class="accent">3つの使い方</span>がある — どれを使えばいい？</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="card w">
+      <div class="icon">🌐</div>
+      <div class="label">その1</div>
+      <h3>ブラウザ版 Claude</h3>
+      <p>ChatGPTと同じチャット形式。文章・要約・アイデア出しに便利。ただし「答えを返すAI」。<br><br><span style="color:var(--muted2);">→「あるんだな」くらいでOK</span></p>
+    </div>
+    <div class="card o" style="background:var(--surface);">
+      <div class="icon">🖥️</div>
+      <div class="label" style="color:var(--orange-lt);">その2 — この講座の中心</div>
+      <h3>デスクトップ版 Claude</h3>
+      <p>普通のアプリとして使えて、<strong style="color:var(--orange-lt);">裏側ではClaude Codeの力</strong>が動く。見た目はわかりやすく、中身は強い。<br><br><span style="color:var(--orange-lt);">→ 初心者はここから</span></p>
+    </div>
+    <div class="card w">
+      <div class="icon">⌨️</div>
+      <div class="label">その3</div>
+      <h3>ターミナル版 Claude Code</h3>
+      <p>本家本流。パワフルで自動化も得意。ただし黒い画面で、最初はハードルが高い。<br><br><span style="color:var(--muted2);">→ 慣れてからで大丈夫</span></p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:24px; font-size:16px; font-weight:600;">
+    結論：<span class="accent">初心者はまずデスクトップ版で大丈夫</span>。いきなりターミナル版から入らなくていい。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ なぜデスクトップ版からか -->
+<div class="slide bg-1">
+  <div class="section-label">準備編 ② — なぜデスクトップ版か</div>
+  <h2>ほとんどの人は<span class="accent">デスクトップ版で十分</span></h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ デスクトップ版の位置づけ</p>
+      <ul class="checklist">
+        <li style="font-size:15px;">見た目がわかりやすい（普通のアプリ）</li>
+        <li style="font-size:15px;">チャットのように入力できる</li>
+        <li style="font-size:15px;">裏側ではClaude Codeの力を使える</li>
+        <li style="font-size:15px;">非エンジニアでも入りやすい</li>
+        <li style="font-size:15px;">ほとんどの人はこれで十分</li>
+      </ul>
+    </div>
+    <div>
+      <div class="warn" style="margin-bottom:16px;">
+        ⚠️ いきなりターミナル版から入ると——黒い画面に英数字がずらっ。「うわ、もう無理」で挫折しやすい。それでClaude Codeを触らなくなるのが一番もったいない。
+      </div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        ターミナル版が強いのは事実。細かい自動化や開発をガッツリやるなら向いています。ただ、<strong style="color:var(--text);">最初からそこに行く必要はありません</strong>。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        まず大事なのは<span class="accent">「Claudeを使える感覚」を持つこと</span>。<br>
+        「もっと本格的に」と思ったときにターミナル版へ移れば大丈夫。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<!-- ⑪ インストール3ステップ -->
+<div class="slide bg-2">
+  <div class="section-label">準備編 ③ — インストール</div>
+  <h2>デスクトップ版のインストールは<span class="accent">3ステップ</span></h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div>
+      <h3>公式ダウンロードページへ</h3>
+      <p>「Claude download」「Claude デスクトップ版」で検索するとすぐ見つかります（claude.com/download）。必ず公式サイトからダウンロードしてください。</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div>
+      <h3>自分のPCに合った版を選ぶ</h3>
+      <p>Macの方は Mac版、Windowsの方は Windows版 をダウンロードします。</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div>
+      <h3>インストールして開く</h3>
+      <p>Macの場合：ダウンロードしたファイルを開き、Claudeのアイコンをアプリケーションフォルダにドラッグ → アプリケーションからClaudeを起動。これで完了です。</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:20px;">
+    <span class="ci">😄</span>
+    <span><strong>思ったより簡単です。</strong>特別に難しい操作はありません。うまくいかないときは、ダウンロードし直すか、PCを再起動してから再度試してみてください。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">11</div>
+</div>
+
+<!-- ⑫ 設定も見ておく -->
+<div class="slide bg-3">
+  <div class="section-label">準備編 ④ — 最初の設定</div>
+  <h2>インストールしたら<span class="accent">「話し方」の設定</span>も見ておく</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        Claudeを開いたら、<strong style="color:var(--text);">左下あたりの設定</strong>を少し見ておきましょう。ここで「どういう話し方・回答をしてほしいか」をあらかじめ指示できます。
+      </p>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 入れておくと便利な指示の例</p>
+      <ul class="checklist">
+        <li style="font-size:15px;">結論から教えてください</li>
+        <li style="font-size:15px;">簡潔に説明してください</li>
+        <li style="font-size:15px;">敬語で話してください</li>
+        <li style="font-size:15px;">初心者にもわかるように説明してください</li>
+      </ul>
+    </div>
+    <div>
+      <div class="callout" style="margin-bottom:16px;">
+        <span class="ci">💬</span>
+        <span><strong>講師の設定例：</strong>「結論から簡潔に」と「敬語で」の2つを入れています。フレンドリーすぎる話し方が苦手なので、そこは自分好みに調整しています。</span>
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        ここに正解はありません。<br>
+        <span class="accent">自分が使いやすい形にしておくこと</span>が大事です。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">12</div>
+</div>
+
+<!-- ⑬ プランはまずProで十分 -->
+<div class="slide bg-1">
+  <div class="section-label">準備編 ⑤ — プランの選び方</div>
+  <h2>プランは<span class="accent">「まずPro」</span>で十分</h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card w">
+      <div class="label">無料プラン</div>
+      <h3>まず試すだけならOK</h3>
+      <p>少し触ってみる分には十分。ただし使える量や機能に制限がある。</p>
+    </div>
+    <div class="card o" style="background:var(--surface);">
+      <div class="label" style="color:var(--orange-lt);">Proプラン — おすすめ</div>
+      <h3>月20ドル（3,000円台〜4,000円前後）</h3>
+      <p>仕事・SNS運用・資料作成に本格的に使うならここから。<strong style="color:var(--orange-lt);">時給1,500円換算なら、月2時間分の短縮でほぼ回収</strong>できる計算。</p>
+    </div>
+    <div class="card w">
+      <div class="label">上位プラン</div>
+      <h3>あとから検討で遅くない</h3>
+      <p>「毎日使い倒すようになった」「上限によくぶつかる」と感じてからで十分。最初から無理に高いプランにしなくて大丈夫。</p>
+    </div>
+  </div>
+  <div class="hl" style="margin-bottom:16px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🧭 初心者におすすめの進め方</p>
+    <p style="font-size:15px; font-weight:600;">① ブラウザ版で少し触る → ② デスクトップ版を入れる → ③ Proプランを検討 → ④ 実際の仕事・SNS運用で使う</p>
+  </div>
+  <div class="callout">
+    <span class="ci">🤝</span>
+    <span>「自分の場合はどのプランが合う？」「何に使えそう？」は人によって変わります。今どの作業に時間がかかっているかを整理すると見えてきます。わからない方は<strong>個別にご相談ください</strong>。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">13</div>
+</div>
+
+<!-- ⑭ 実践① コード画面 -->
+<div class="slide bg-2">
+  <div class="section-label">実践編 ① — 画面の見方</div>
+  <h2>開いたら、使うのは<span class="accent">「コード」</span>画面</h2>
+  <div class="g2" style="margin-bottom:20px;">
+    <div class="card w">
+      <div class="label">チャット</div>
+      <h3>💬 ChatGPTのように会話する場所</h3>
+      <p style="margin-top:6px;">質問したり、文章を作ってもらったり、相談したりするところ。便利ですが、この講座のメインではありません。</p>
+    </div>
+    <div class="card o" style="background:var(--surface);">
+      <div class="label" style="color:var(--orange-lt);">コード — ここを使う</div>
+      <h3>⌨️ Claude Code の画面</h3>
+      <p style="margin-top:6px;">PCの中での作業はここから。ファイルの作成・整理・編集など、<strong style="color:var(--orange-lt);">「実際に手を動かす仕事」を頼む場所</strong>です。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    最初は<span class="accent">「ほぼコードだけ使う」</span>と思ってもらって大丈夫です
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">14</div>
+</div>
+
+<!-- ⑮ 実践② セッション -->
+<div class="slide bg-3">
+  <div class="section-label">実践編 ② — セッション</div>
+  <h2>セッション = 作業ごとの<span class="accent">「部屋」</span></h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        画面の左側に並ぶ履歴を<strong style="color:var(--text);">「セッション」</strong>と呼びます。難しく聞こえますが、要するに<strong style="color:var(--text);">1つの作業部屋</strong>。ChatGPTの会話履歴と同じイメージです。
+      </p>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 1つの作業につき、1つの部屋</p>
+      <div>
+        <span class="tag">note記事を作る部屋</span>
+        <span class="tag">デスクトップを整理する部屋</span>
+        <span class="tag">資料を作る部屋</span>
+        <span class="tag">動画台本を作る部屋</span>
+      </div>
+      <p style="font-size:14px; color:var(--muted); margin-top:12px;">作業ごとにセッションを分けておくと、あとから見返すときもわかりやすくなります。</p>
+    </div>
+    <div>
+      <div class="kw" style="margin-bottom:16px;">
+        <div class="kw-num">NEW SESSION</div>
+        <div class="kw-title">➕ 新しい部屋を作るボタン</div>
+        <div class="kw-desc">画面右上あたりの「New Session」を押すと、新しい作業部屋が立ち上がります。Macならショートカット <strong>⌘ + N</strong> でもOK（覚えなくても大丈夫）。</div>
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        最初はこれだけでOK：<br>
+        <span class="accent">「新しい作業をしたい → New Session を押す」</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">15</div>
+</div>
+
+<!-- ⑯ 実践③ ローカル＋フォルダ -->
+<div class="slide bg-1">
+  <div class="section-label">実践編 ③ — 作業場所</div>
+  <h2>作業場所は<span class="accent">「ローカル」</span>を選び、フォルダを決める</h2>
+  <div class="g-50-50">
+    <div>
+      <div class="kw" style="margin-bottom:14px;">
+        <div class="kw-num">STEP A</div>
+        <div class="kw-title">💻 ローカルを選ぶ</div>
+        <div class="kw-desc">ローカル＝自分のPCのこと。「このパソコンの中で作業します」という意味です。ローカル／クラウドの選択肢が出たら、まずはローカルでOK。</div>
+      </div>
+      <div class="kw">
+        <div class="kw-num">STEP B</div>
+        <div class="kw-title">📁 作業するフォルダを決める</div>
+        <div class="kw-desc">「あなたはこのフォルダの中で作業してください」と場所を指定する。名前は「Workspace」「Claude作業用」「デモ用」など何でもOK。</div>
+      </div>
+    </div>
+    <div>
+      <div class="warn" style="margin-bottom:16px;">
+        ⚠️ <strong>いきなり大事なフォルダで試さない。</strong>これは本当に大事です。Claude Codeはファイルを作る・編集する・消すことができるからこそ、最初は新しい作業用フォルダの中で試すのが安心です。
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        PC全体を自由に触らせるのではなく、<br>
+        <span class="accent">触ってほしい場所を先に決めておく</span>。<br>
+        これが安全に使うための基本です。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">16</div>
+</div>
+
+<!-- ⑰ 実践④ プランモード -->
+<div class="slide bg-2">
+  <div class="section-label">実践編 ④ — 許可設定</div>
+  <h2>許可設定は<span class="accent">「プランモード」</span>がおすすめ</h2>
+  <div class="g-50-50">
+    <div>
+      <div class="day-row"><div class="day-badge" style="min-width:96px;">毎回確認</div><p style="font-size:14px;">操作のたびに確認が入る。慎重派向け</p></div>
+      <div class="day-row" style="background:var(--surface); border-radius:8px; padding:11px 8px;"><div class="day-badge" style="min-width:96px;">プランモード</div><p style="font-size:14px;"><strong style="color:var(--orange-lt);">★おすすめ。</strong>先に計画を出してくれる → 確認して承認</p></div>
+      <div class="day-row"><div class="day-badge" style="min-width:96px;">自動モード</div><p style="font-size:14px;">確認少なめでどんどん進む。慣れてから</p></div>
+      <div class="day-row" style="border-bottom:none;"><div class="day-badge" style="min-width:96px; color:#B91C1C; border-color:rgba(220,38,38,0.3); background:rgba(220,38,38,0.05);">バイパス</div><p style="font-size:14px; color:#B91C1C;">確認なしで全部進む。<strong>最初は触らない</strong></p></div>
+    </div>
+    <div>
+      <div class="hl" style="margin-bottom:14px;">
+        <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">プランモードの流れ</p>
+        <p style="font-size:15px; font-weight:600;">指示を出す → Claudeが「こういう流れで作業します」と計画を提示 → 内容を確認 → 承認 → 実行</p>
+      </div>
+      <div class="warn" style="margin-bottom:14px;">
+        ⚠️ 「許可をバイパス」は毎回確認せずどんどん進む設定。業界では冗談っぽく<strong>「デンジャラスモード」</strong>と呼ばれることも。慣れるまでは使わない。
+      </div>
+      <div class="callout">
+        <span class="ci">🤖</span>
+        <span><strong>モデル選択はまずSonnetでOK。</strong>OpusやHaikuとの使い分けは後ほど「モデル編」で説明します。モデル選びで止まらず、まず動かすことが大事です。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">17</div>
+</div>
+
+<!-- ⑱ 実践⑤ デモ指示 -->
+<div class="slide bg-3">
+  <div class="section-label">実践編 ⑤ — 最初のデモ</div>
+  <h2>デモ：デスクトップを<span class="accent">散らかして、片づけてもらう</span></h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        なぜこのデモかというと、<strong style="color:var(--text);">「本当にPCの中で作業できる」ことが一目でわかる</strong>からです。<br><br>
+        ChatGPTに「私のデスクトップを散らかして」と言ってもできません。ブラウザの中のAIは、PCの中に入れないからです。Claude Codeならできます。
+      </p>
+      <div class="callout">
+        <span class="ci">🎤</span>
+        <span>こうした長めの指示は<strong>音声入力を使うとかなり楽</strong>です。詳しいコツは後ほど「つまずき対策編」で紹介します。</span>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">実際に入力する指示（自然な言葉でOK）</p>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> 今、Claude Codeのデモを行っています。デスクトップのフォルダを散らかして、その後デスクトップを整理するデモを行いたいので、一旦私のデスクトップを汚してもらってもいいでしょうか。<br><br>
+        <span class="tg">⏺</span> 承知しました。デモ用のファイルとフォルダを作成する計画を立てます…
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin-top:10px;">難しいコードは一切不要。普通にお願いする感じで伝えればOKです。</p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">18</div>
+</div>
+
+<!-- ⑲ 実践⑥ プラン確認→実行→復元 -->
+<div class="slide bg-1">
+  <div class="section-label">実践編 ⑥ — 確認 → 実行 → 復元</div>
+  <h2>すぐ承認しない。<span class="accent">プランを見てから</span>進める</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item"><span class="who">AI</span>計画を提示してくる</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">人間</span>内容を確認（既存ファイルに触らない？）</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>デモ用ファイルを実際に作成</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">人間</span>「元に戻してください」と依頼</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>整理・削除して復元</div>
+    </div>
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        承認すると、デスクトップに「請求書」「下書き」「スクリーンショット」「素材フォルダ」「一時ファイル」などが実際に並び、見事に散らかります。<br><br>
+        今回のデモでは、細かく言わなくてもClaudeが<strong style="color:var(--text);">「デモ用だから既存ファイルには触らない」と自分で判断</strong>してくれました。かなり賢い。<strong style="color:var(--text);">ただし毎回完璧とは限らない</strong>——だからプランの確認が大事です。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        文章を返すだけでなく、実際にファイルを<span class="accent">作り・整理し・消せる</span>。これが「PCの中で働くAI」。<br>
+        <span style="font-size:13px; font-weight:400; color:var(--muted);">※今回のデモは入り口の入り口。ここから記事作成・資料整理・SNS運用・定型作業の自動化へ広がります。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">19</div>
+</div>
+
+<!-- ⑳ 実践⑦ 安全6箇条 -->
+<div class="slide bg-2">
+  <div class="section-label">実践編 ⑦ — 安全に使う</div>
+  <h2>安全に触るための<span class="accent">6つの約束</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">
+    そもそも編で見た「4つのポイント」を、実際の操作に落とすとこうなります。
+  </p>
+  <ul class="checklist" style="margin-bottom:20px;">
+    <li style="font-size:16px;">いきなり大事なフォルダで試さない</li>
+    <li style="font-size:16px;">作業場所を限定する（作業用フォルダを指定）</li>
+    <li style="font-size:16px;">プランモードで確認しながら進める</li>
+    <li style="font-size:16px;">「許可をバイパス」は使わない</li>
+    <li style="font-size:16px;">「既存ファイルには触らないで」と指示に添える</li>
+    <li style="font-size:16px;">作業後に何をしたか確認する</li>
+  </ul>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    怖がりすぎる必要はありません。ただし、<span class="accent">雑に使わない</span>。これだけで安心して使えます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">20</div>
+</div>
+
+<!-- ㉑ 管理① ChatGPTと使い方が違う -->
+<div class="slide bg-3">
+  <div class="section-label">管理編 ① — セッションの感覚</div>
+  <h2>チャットは「育てる」、セッションは<span class="accent">「使い捨てる」</span></h2>
+  <div class="vs-wrap" style="margin-bottom:18px;">
+    <div class="vs-box">
+      <div class="vs-title">ChatGPT・Gemini の感覚</div>
+      <h3>🪴 1つのチャットを長く育てる</h3>
+      <p>仕事相談用・リサーチ用・文章作成用……同じチャットを使い続け、過去のやり取りを踏まえて返してもらう。<br><br>「このチャットは消したくない」となりがち。</p>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">Claude Code の感覚</div>
+      <h3>🔄 作業ごとに切り替える</h3>
+      <p>「この作業が終わったら、はい次」。かなりドライですが、<strong style="color:var(--orange-lt);">その方がClaude Codeは力を発揮</strong>します。<br><br>セッションに未練を持たなくてOK。</p>
+    </div>
+  </div>
+  <div class="warn">
+    ⚠️ 同じ感覚で長く使い続けると——「なんか重くなってきた」「途中から精度が落ちた」となります。理由はこの後の「コンテキスト」でわかります。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">21</div>
+</div>
+
+<!-- ㉒ 管理② タイミーの例え -->
+<div class="slide bg-1">
+  <div class="section-label">管理編 ② — 全体マップ</div>
+  <h2>飲食店で例えると、<span class="accent">ぜんぶつながる</span></h2>
+  <div style="margin-top:4px;">
+    <div class="day-row" style="padding:13px 0;">
+      <div class="day-badge" style="min-width:120px; font-size:13px;">お店</div>
+      <p><strong>Claude Code 本体。</strong>あなたはこのお店のオーナーです。</p>
+    </div>
+    <div class="day-row" style="padding:13px 0;">
+      <div class="day-badge" style="min-width:120px; font-size:13px;">マニュアル</div>
+      <p><strong>MD（CLAUDE.md）。</strong>バイトさんが働く前に読む、お店のルールブック。</p>
+    </div>
+    <div class="day-row" style="padding:13px 0;">
+      <div class="day-badge" style="min-width:120px; font-size:13px;">勤務時間</div>
+      <p><strong>セッション。</strong>毎回新しいバイトさんが来て、働いて、退勤するイメージ。</p>
+    </div>
+    <div class="day-row" style="padding:13px 0; border-bottom:none;">
+      <div class="day-badge" style="min-width:120px; font-size:13px;">仕事量</div>
+      <p><strong>コンテキスト。</strong>勤務時間内にこなした仕事の積み上がり。増えるほど疲れる。</p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:20px; font-size:16px; font-weight:600;">
+    毎回<span class="accent">新しいバイトさんが働きに来る</span>イメージ。この例えで、ここからの話がぜんぶつながります。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">22</div>
+</div>
+
+<!-- ㉓ 管理③ MD＝マニュアル -->
+<div class="slide bg-2">
+  <div class="section-label">管理編 ③ — MD（マニュアル）</div>
+  <h2>MD = お店のマニュアル。<span class="accent">分厚くしない</span>のがコツ</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.8; margin-bottom:12px;">
+        初出勤のバイトさんに、いきなり「盛り付けやって」「接客お願い」では困ります。まず<strong style="color:var(--text);">お店のルール</strong>を伝える——それがMDです。
+      </p>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ マニュアルに書くことの例</p>
+      <ul class="checklist">
+        <li style="font-size:15px;">文章は敬語で・結論から書く</li>
+        <li style="font-size:15px;">記事はこの構成で作る</li>
+        <li style="font-size:15px;">ファイル名・保存先のルール</li>
+        <li style="font-size:15px;">毎回この手順で進める</li>
+      </ul>
+    </div>
+    <div>
+      <div class="warn" style="margin-bottom:16px;">
+        ⚠️ <strong>分厚いマニュアルはNG。</strong>読むだけで2〜3時間かかったら、働く前にヘトヘトです。MDが長すぎると、読み込むだけでセッションを圧迫します（＝働き始める前から疲れている状態）。
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600; margin-bottom:14px;">
+        必要なことを、必要な分だけ、<span class="accent">簡潔に</span>。長ければいいわけではありません。
+      </div>
+      <div class="callout">
+        <span class="ci">📘</span>
+        <span>MDの詳しい作り方・育て方は、この後の<strong>「MD編」</strong>でしっかり扱います。ここでは考え方だけでOK。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">23</div>
+</div>
+
+<!-- ㉔ 管理④ セッション＝勤務時間・コンテキスト＝仕事量 -->
+<div class="slide bg-3">
+  <div class="section-label">管理編 ④ — コンテキスト</div>
+  <h2>働かせすぎると<span class="accent">疲れて質が落ちる</span>のは、人もAIも同じ</h2>
+  <div class="g-50-50">
+    <div>
+      <div class="kw" style="margin-bottom:14px;">
+        <div class="kw-num">セッション = 勤務時間</div>
+        <div class="kw-title">🕐 朝一は元気、夕方は疲れる</div>
+        <div class="kw-desc">長く働かせるほど集中力が落ち、判断が雑になる。Claude Codeも1セッションで長く作業させるほど重くなり、質が落ちやすい。</div>
+      </div>
+      <div class="kw">
+        <div class="kw-num">コンテキスト = 仕事量</div>
+        <div class="kw-title">📈 やり取りが積み上がっていく</div>
+        <div class="kw-desc">あなたの指示・Claudeの返答・ファイルを見た履歴・作業内容——すべて積み上がり、セッションを圧迫していく。</div>
+      </div>
+    </div>
+    <div>
+      <div class="warn" style="margin-bottom:16px;">
+        ⚠️ 記事も台本もフォルダ整理も議事録もSNS投稿も……を1つのセッションに詰め込むのは、<strong>休憩なしで働かせている状態</strong>。Claude Codeにはホワイト企業運営を。
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        目安：右下の<span class="accent">円形バーが5〜6割</span>になったら一度区切る。<br>
+        <span style="font-size:13px; font-weight:400; color:var(--muted);">7〜8割まで使い切ってから引き継ぎを書かせると、「疲れ切った状態で日報を書く」ことになり、質が落ちます。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">24</div>
+</div>
+
+<!-- ㉕ 管理⑤ 引き継ぎ -->
+<div class="slide bg-1">
+  <div class="section-label">管理編 ⑤ — 引き継ぎ</div>
+  <h2>余力があるうちに<span class="accent">「引き継ぎ」</span>を書いてもらう</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        「あと少しだから、このまま続けたい」が一番危ない。無理に続けるとセッションが圧迫され、最後に書いてもらう引き継ぎの質が落ちます。<br><br>
+        タイミーで言えば、<strong style="color:var(--text);">前日のバイトさんが日報を書き、翌日のバイトさんがそれを読んで仕事に入る</strong>——この流れをClaude Codeでも作ります。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        理想のタイミングは<span class="accent">5〜6割</span>。疲れ切る前に書いてもらう。
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">引き継ぎのお願い（コピペOK）</p>
+      <div class="terminal" style="margin-bottom:12px;">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> ここまでの作業内容、決定事項、作成したファイル、未完了タスク、次にやるべきこと、注意点を引き継ぎ用にまとめてください。
+      </div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">新しいセッションでの渡し方</p>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> 以下の引き継ぎ内容を読んで、続きから作業してください。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">25</div>
+</div>
+
+<!-- ㉖ 管理⑥ 3つの選択肢 -->
+<div class="slide bg-2">
+  <div class="section-label">管理編 ⑥ — 区切り方</div>
+  <h2>作業が終わったら、<span class="accent">3つの選択肢</span></h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o" style="background:var(--surface);">
+      <div class="label" style="color:var(--orange-lt);">選択肢1 — 基本はこれ</div>
+      <h3>➕ New Session</h3>
+      <p>新しい部屋を立ち上げる。完全に次の作業へ移るときはこれでOK。</p>
+    </div>
+    <div class="card a">
+      <div class="label">選択肢2 — /clear</div>
+      <h3>🧹 Clear</h3>
+      <p>今までのやり取りを消してスッキリ。サイドバーが乱立しないのが利点。<br><strong style="color:#B91C1C;">※記憶が消えるので、引き継ぎとセットで使う</strong></p>
+    </div>
+    <div class="card w">
+      <div class="label">選択肢3 — /compact</div>
+      <h3>🗜️ Compact</h3>
+      <p>やり取りを圧縮して、必要な文脈だけ残す。「◯◯の項目だけ残して圧縮して」と<strong>残したい文脈を指定</strong>すると精度が上がる。最初は無理に使わなくてOK。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    初心者のおすすめ：<span class="accent">引き継ぎを書く → Clear または New Session → 引き継ぎを渡して再開</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">26</div>
+</div>
+
+<!-- ㉗ 管理⑦ 仕分け -->
+<div class="slide bg-3">
+  <div class="section-label">管理編 ⑦ — 情報の仕分け</div>
+  <h2>残すものは<span class="accent">2種類</span>だけ。セッションは使い捨てる</h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o">
+      <div class="icon">📘</div>
+      <h3>毎回使うルール → MDへ</h3>
+      <p>「敬語で書く」「記事はこの構成」「保存先はここ」——今後もずっと使うルールはマニュアル（MD）に昇格させる。</p>
+    </div>
+    <div class="card a">
+      <div class="icon">📝</div>
+      <h3>一時的な作業内容 → 引き継ぎへ</h3>
+      <p>ここまでの経緯・決定事項・残タスクなど、この仕事だけの情報は引き継ぎメモにまとめて次のセッションへ。</p>
+    </div>
+    <div class="card w">
+      <div class="icon">👋</div>
+      <h3>セッション → 使い捨てでOK</h3>
+      <p>その日働きに来てくれたバイトさん。仕事が終わったら「ありがとうございました」で退勤してもらって大丈夫。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    サイドバーを恐れず、<span class="accent">どんどんセッションを立ち上げる</span>。これがClaude Codeを気持ちよく使うコツ。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">27</div>
+</div>
+
+<!-- ㉘ 対策① フードコート -->
+<div class="slide bg-1">
+  <div class="section-label">つまずき対策編 ① — 3つの場所</div>
+  <h2>チャット・Co-Act・コードは<span class="accent">「同じ建物の別のお店」</span></h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.8; margin-bottom:12px;">
+        デスクトップ版の左上には3つの場所があります。同じClaudeの中にありますが、<strong style="color:var(--text);">それぞれ独立</strong>しています。
+      </p>
+      <div class="day-row" style="padding:12px 0;">
+        <div class="day-badge" style="min-width:88px;">チャット</div>
+        <p style="font-size:14px;">ChatGPTのように会話・壁打ち・相談する場所</p>
+      </div>
+      <div class="day-row" style="padding:12px 0;">
+        <div class="day-badge" style="min-width:88px;">Co-Act</div>
+        <p style="font-size:14px;">最初はあまり気にしなくてOK（詳しくは後ほど「使い分け編」で）</p>
+      </div>
+      <div class="day-row" style="padding:12px 0; border-bottom:none;">
+        <div class="day-badge" style="min-width:88px;">コード</div>
+        <p style="font-size:14px;"><strong style="color:var(--orange-lt);">実際の作業をする場所（この講座の中心）</strong></p>
+      </div>
+    </div>
+    <div>
+      <div class="hl" style="margin-bottom:14px;">
+        <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🍜 フードコートの例え</p>
+        <p style="font-size:15px;">同じ建物の中でも、ラーメン屋・カレー屋・クレープ屋は別のお店。スタッフも注文内容も引き継がれません。</p>
+      </div>
+      <div class="warn" style="margin-bottom:14px;">
+        ⚠️ チャットで話した内容をコードで「さっき話したあれだけど」と言っても、通じないことがあります。<strong>記憶はそのまま引き継がれない</strong>。
+      </div>
+      <div class="callout">
+        <span class="ci">📋</span>
+        <span>チャットの内容をコードで使いたいときは、<strong>必要な部分をコピーして渡す</strong>か、<strong>引き継ぎ文にまとめてから渡す</strong>。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">28</div>
+</div>
+
+<!-- ㉙ 対策② プロジェクト -->
+<div class="slide bg-2">
+  <div class="section-label">つまずき対策編 ② — プロジェクト</div>
+  <h2>テーマごとに記憶を分けたいなら<span class="accent">「プロジェクト」</span></h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:12px;">
+        チャット側には<strong style="color:var(--text);">「プロジェクト」</strong>という機能があります。特定のテーマごとに話を分け、そのテーマの文脈を持ちながらやり取りできる仕組みです。
+      </p>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ プロジェクトに分けると便利なテーマの例</p>
+      <div>
+        <span class="tag">料理発信のキャプション</span>
+        <span class="tag">リール台本</span>
+        <span class="tag">ストーリーズ案</span>
+        <span class="tag">記事作成</span>
+        <span class="tag">SNS運用</span>
+        <span class="tag">講座設計</span>
+      </div>
+    </div>
+    <div>
+      <div class="warn" style="margin-bottom:14px;">
+        ⚠️ 料理発信の話をしているところに、別事業や採用の話が混ざると<strong>記憶がごちゃつく</strong>。テーマが混ざりそうなら部屋を分ける。
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600; margin-bottom:14px;">
+        「この話は独立して進めたい」と思ったら<span class="accent">プロジェクトへ</span>。
+      </div>
+      <div class="callout">
+        <span class="ci">💡</span>
+        <span>チャットも考え方はセッションと同じ。<strong>1つの部屋を永遠に使い続けず</strong>、ある程度使ったら区切って新しく立ち上げるのがコツです。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">29</div>
+</div>
+
+<!-- ㉚ 対策③ 音声入力 -->
+<div class="slide bg-3">
+  <div class="section-label">つまずき対策編 ③ — 音声入力</div>
+  <h2>指示は、<span class="accent">喋った方が早い</span></h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        Claudeにちゃんと動いてもらうには、ある程度しっかり伝える必要があります。でも、それを全部キーボードで打つと大変。<br><br>
+        <strong style="color:var(--text);">多少の誤字脱字があっても、AIは文脈でかなり理解してくれます。</strong>手入力に時間をかけすぎる方がもったいない。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        AI時代は<span class="accent">音声入力との相性が抜群</span>。話す → Claudeに投げる、でスピードが一気に上がります。
+      </div>
+    </div>
+    <div>
+      <div class="kw" style="margin-bottom:14px;">
+        <div class="kw-num">おすすめツール</div>
+        <div class="kw-title">🎤 Aqua Voice</div>
+        <div class="kw-desc">音声を文字にするだけでなく、<strong>話し言葉を自然な文章に整えてくれる</strong>のが便利。「えー」「あのー」「まあ」などの不要な言葉をカットして、伝わりやすい形にしてくれます。</div>
+      </div>
+      <div class="callout">
+        <span class="ci">⚡</span>
+        <span>手で長文を打つ → 音声で伝えて整えてもらう → Claudeに投げる。この流れに変えるだけで、指示出しがかなり速くなります。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">30</div>
+</div>
+
+<!-- ㉛ 対策④ わかりませんでOK -->
+<div class="slide bg-1">
+  <div class="section-label">つまずき対策編 ④ — 困ったとき</div>
+  <h2>わからないときは、<span class="accent">「わかりません」</span>と伝えていい</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        Claudeの出力の意味がわからない。どこを見ればいいかわからない。次に何をすればいいかわからない——<strong style="color:var(--text);">これは必ずあります</strong>。<br><br>
+        大事なのは<strong style="color:var(--text);">わかったフリをしないこと</strong>。「わかりません」でOK。もっと言うと<strong style="color:var(--text);">「何がわからないのかもわかりません」でも大丈夫</strong>。Claudeが説明のレベルを下げ、次に見る場所を教えてくれます。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        「これくらいわかってないとダメかな」と思う必要はありません。<span class="accent">わからないものは、わからないでいい</span>。
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">こんな聞き方でOK</p>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> すみません、今の説明がわかりませんでした。何がわからないのかもわからない状態です。初心者にもわかる言葉で、いま見るべき場所と次にやることを教えてください。<br><br>
+        <span class="tg">⏺</span> 大丈夫です。順番に確認しましょう。まず画面左側の…
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">31</div>
+</div>
+
+<!-- ㉜ 対策⑤ スクリーンショット -->
+<div class="slide bg-2">
+  <div class="section-label">つまずき対策編 ⑤ — スクリーンショット</div>
+  <h2>画面で困ったら<span class="accent">スクリーンショット</span>が最強</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ こんなとき、画面を見せるのが一番早い</p>
+      <ul class="checklist" style="margin-bottom:16px;">
+        <li style="font-size:15px;">どのボタンを押せばいいかわからない</li>
+        <li style="font-size:15px;">設定画面で止まっている</li>
+        <li style="font-size:15px;">エラーが出た</li>
+        <li style="font-size:15px;">選択肢が多くて迷っている</li>
+        <li style="font-size:15px;">今の進捗を見てほしい</li>
+      </ul>
+      <div class="warn">
+        🔑 <strong>APIキー・パスワード・認証コード・個人情報・決済情報は絶対に映さない。</strong>貼る前に確認し、必要なら黒塗り・切り取りを。特にAPIキーは外部からサービスを操作できる「鍵」——流出すると危険です。
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">Macのスクショ設定を整えるとさらに快適</p>
+      <div class="kw" style="margin-bottom:12px;">
+        <div class="kw-num">設定 1</div>
+        <div class="kw-title">📋 クリップボード保存にする</div>
+        <div class="kw-desc">撮ったらそのまま ⌘ + V で貼り付けられる。デスクトップにスクショが溜まらないのでストレスなし。</div>
+      </div>
+      <div class="kw">
+        <div class="kw-num">設定 2</div>
+        <div class="kw-title">🪟 ウィンドウだけ撮る</div>
+        <div class="kw-desc"><strong>⌘ + Shift + 4 → Space → ウィンドウをクリック</strong>。必要な画面だけ渡せるので、関係ない情報が映り込まず、漏えいリスクも下がる。</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">32</div>
+</div>
+
+<!-- ㉝ 対策⑥ つまずいたら3つ -->
+<div class="slide bg-3">
+  <div class="section-label">つまずき対策編 ⑥ — まとめ</div>
+  <h2>最初につまずいたら、<span class="accent">この3つ</span>を思い出す</h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o">
+      <div class="icon">⌨️</div>
+      <h3>① 基本はコードを使う</h3>
+      <p>ラフな相談はチャット、実際の作業はコード。迷ったらコードでOK。</p>
+    </div>
+    <div class="card a">
+      <div class="icon">🙋</div>
+      <h3>② わからないと伝える</h3>
+      <p>わかったフリをしない。「何がわからないかもわからない」でも大丈夫。</p>
+    </div>
+    <div class="card g">
+      <div class="icon">📸</div>
+      <h3>③ スクショを渡す</h3>
+      <p>画面で止まったら文章で頑張らず、スクリーンショットを見せる（機密情報には注意）。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:15px;">
+    余裕が出てきたら——<span class="accent">音声入力 ／ /compact ／ /clear ／ セッションを分ける ／ プロジェクトを分ける</span>を少しずつ。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">33</div>
+</div>
+
+<!-- ㉞ モデル編① 3つのモデル -->
+<div class="slide bg-1">
+  <div class="section-label">モデル編 ① — 結論</div>
+  <h2>モデルは3つ。<span class="accent">普段はSonnet、考える仕事はOpus</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">
+    画面右下に出てくる Sonnet／Opus／Haiku。最初は迷いますが、考え方はシンプルです。
+  </p>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o" style="background:var(--surface);">
+      <div class="label" style="color:var(--orange-lt);">Sonnet — 基本はここ</div>
+      <div class="icon">🛠️</div>
+      <h3>優秀な実務担当者</h3>
+      <p>手順が決まった作業を安定してこなす。<strong style="color:var(--orange-lt);">普段使いの7割はSonnetで足ります</strong>。</p>
+    </div>
+    <div class="card a">
+      <div class="label">Opus — ここぞの場面で</div>
+      <div class="icon">🧠</div>
+      <h3>思考の専門家</h3>
+      <p>答えが決まっていない戦略・設計・複雑な判断に強い。使いどころを選んで呼ぶ。</p>
+    </div>
+    <div class="card w">
+      <div class="label">Haiku — 気にしなくてOK</div>
+      <div class="icon">🪶</div>
+      <h3>裏方の調査役</h3>
+      <p>軽くて速くて低コスト。Claudeが裏側で小さな調べものを走らせるときに働く「部下」。自分から選ぶ場面は少ない。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    まずは<span class="accent">SonnetとOpusの2つ</span>だけ覚えれば十分です
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">34</div>
+</div>
+
+<!-- ㉟ モデル編② Sonnet -->
+<div class="slide bg-2">
+  <div class="section-label">モデル編 ② — Sonnet</div>
+  <h2>Sonnet = <span class="accent">手を動かす作業</span>ぜんぶ</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 答えや手順がある程度決まっている作業</p>
+      <div style="margin-bottom:16px;">
+        <span class="tag">デスクトップ・フォルダの整理</span>
+        <span class="tag">ファイル名の変更</span>
+        <span class="tag">文字起こしを整える</span>
+        <span class="tag">文章の要約</span>
+        <span class="tag">テキストの変換</span>
+        <span class="tag">Zoom録画のダウンロード</span>
+        <span class="tag">ドライブへのアップロード</span>
+        <span class="tag">決まった手順の作業</span>
+      </div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.8;">
+        共通点は<strong style="color:var(--text);">「自分でもできるけど、面倒だから任せたい」</strong>作業。こういう仕事はまずSonnetです。
+      </p>
+    </div>
+    <div>
+      <div class="kw" style="margin-bottom:14px;">
+        <div class="kw-num">指示の例</div>
+        <div class="kw-title">🗣️ このくらいの言い方で安定して動く</div>
+        <div class="kw-desc">「このフォルダを整理して」「この資料を要約して」「この形式に変換して」「この流れで作業して」</div>
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        Opusより<span class="accent">使用量を抑えやすい</span>のも大事なポイント。<br>
+        <span style="font-size:13px; font-weight:400; color:var(--muted);">普段の作業を全部Opusでやるのは、かなりもったいない使い方です。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">35</div>
+</div>
+
+<!-- ㊱ モデル編③ Opus -->
+<div class="slide bg-3">
+  <div class="section-label">モデル編 ③ — Opus</div>
+  <h2>Opus = <span class="accent">答えが決まっていない仕事</span>と重い読み込み</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 戦略・設計・複雑な判断</p>
+      <div style="margin-bottom:14px;">
+        <span class="tag">新規事業の戦略</span>
+        <span class="tag">店舗事業の設計</span>
+        <span class="tag">マーケの方向性</span>
+        <span class="tag">商品設計の壁打ち</span>
+        <span class="tag">事業計画の整理</span>
+        <span class="tag">大量の情報から方針を出す</span>
+      </div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 重い資料の読み込みもOpus向き</p>
+      <p style="font-size:14px; color:var(--muted); line-height:1.7;">長いPDF・大量の文字起こし・複雑な議事録・複数資料の全体把握など。大きな文脈を扱いやすいのがOpusの強みです。</p>
+    </div>
+    <div>
+      <div class="hl" style="margin-bottom:14px;">
+        <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">📄 LPを作るなら</p>
+        <p style="font-size:15px;">いきなり「LP作って」ではなく、まず<strong>Opusで設計を壁打ち</strong>——誰に向けて？何を伝える？どの順番？どの訴求？——方向性が決まったら<strong style="color:var(--orange-lt);">Sonnetに切り替えて実装</strong>。</p>
+      </div>
+      <div class="callout">
+        <span class="ci">🛢️</span>
+        <span><strong>Opus 1M＝大容量タンク。</strong>普通のモデルが500mlのペットボトルなら、1Mは大きなタンク。大きな資料や複雑な全体設計に便利。ただし普段のファイル整理に使う必要はありません。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">36</div>
+</div>
+
+<!-- ㊲ モデル編④ 3段運用 -->
+<div class="slide bg-1">
+  <div class="section-label">モデル編 ④ — 3段運用</div>
+  <h2>迷ったら<span class="accent">「Sonnet → Opus → Sonnet」</span>の3段運用</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item"><span class="who">Sonnet</span>普段の作業を進める</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">Opus</span>戦略・設計・重い判断だけ任せる</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">Sonnet</span>方向性が決まったら作業に戻す</div>
+    </div>
+    <div>
+      <div class="kw" style="margin-bottom:14px;">
+        <div class="kw-num">note記事の例</div>
+        <div class="kw-title">📝 実際の流れ</div>
+        <div class="kw-desc">① Opusで「この講義をnote記事にするなら構成は？」→ ② 構成が決まったらSonnetで「この構成で本文を書いて」→ ③ 修正・整形もSonnetで。</div>
+      </div>
+      <div class="hl" style="font-size:15px;">
+        🏢 <strong>何でもOpusにしない。</strong>毎回、社長にコピー用紙の補充を頼むようなものです。できるけど、もったいない。<br>
+        <span class="accent" style="font-weight:600;">コピー用紙の補充は担当者（Sonnet）、戦略会議は社長（Opus）。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">37</div>
+</div>
+
+<!-- ㊳ モデル編⑤ 使用制限 -->
+<div class="slide bg-2">
+  <div class="section-label">モデル編 ⑤ — 使用制限</div>
+  <h2>使用制限は<span class="accent">2種類</span>ある —「急に使えない」の正体</h2>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="card a">
+      <div class="label">制限 1 — 短期（数時間単位）</div>
+      <h3>⏳ 時間が経てば戻る</h3>
+      <p style="margin-top:6px;">使い始めから一定時間で回復するタイプ。しばらく待てばまた使えます。</p>
+    </div>
+    <div class="card r">
+      <div class="label">制限 2 — 週間</div>
+      <h3>📅 1週間の使用量が積み上がる</h3>
+      <p style="margin-top:6px;">月・火・水…と数日分が蓄積。<strong>「短期は戻っているはずなのに使えない」の正体はこちら</strong>です。</p>
+    </div>
+  </div>
+  <div class="warn" style="margin-bottom:14px;">
+    ⚠️ Opusの多用・大きなデータベース構築・サブエージェントの大量起動は<strong>一気に消費</strong>します。「始めたばかりなのにもういっぱい？」が起きるので、重い作業は使用量を見ながら。
+  </div>
+  <div class="callout">
+    <span class="ci">📊</span>
+    <span><strong>使用量は左下の設定 → 使用量で確認できます。</strong>準備編で話した「上限によくぶつかったら上位プラン」の"上限"がこれ。まずProで始めて、足りなくなったら検討で大丈夫です。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">38</div>
+</div>
+
+<!-- ㊴ モデル編⑥ 実務の使い分け -->
+<div class="slide bg-3">
+  <div class="section-label">モデル編 ⑥ — 実務での使い分け</div>
+  <h2>頭を使う上流は<span class="accent">Opus</span>、手を動かす下流は<span class="accent">Sonnet</span></h2>
+  <div class="vs-wrap" style="margin-bottom:18px;">
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">Opus — 上流工程</div>
+      <h3>🧠 考える</h3>
+      <p style="text-align:left;">
+        <strong>SNS運用：</strong>リールの方向性・ターゲット・差別化<br>
+        <strong>資料作成：</strong>目的の整理・全体構成・訴求ポイント<br>
+        <strong>業務改善：</strong>フローの見直し・改善の優先順位・リスク整理
+      </p>
+    </div>
+    <div class="vs-divider">→</div>
+    <div class="vs-box">
+      <div class="vs-title">Sonnet — 下流工程</div>
+      <h3>🛠️ 作業する</h3>
+      <p style="text-align:left;">
+        <strong>SNS運用：</strong>台本を10本作る・キャプション・リライト<br>
+        <strong>資料作成：</strong>スライド文・見出し・誤字脱字の修正<br>
+        <strong>業務改善：</strong>チェックリスト・マニュアル化・テンプレ作成
+      </p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    何でも強いモデルではなく、<span class="accent">仕事に合わせてちょうどいいモデルを選ぶ</span>。これが長くうまく使うコツ。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">39</div>
+</div>
+
+<!-- ㊵ MD編① MDがあると何が変わる -->
+<div class="slide bg-1">
+  <div class="section-label">MD編 ① — なぜMDか</div>
+  <h2>AIは使う人で差が出る。差を作るのが<span class="accent">MD</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:14px;">
+    同じClaudeでも「使いやすい」人と「思った通りに動かない」人がいます。違いは性能ではなく、<strong style="color:var(--text);">どんな前提とルールを渡しているか</strong>。たとえば「今週のリール用の投稿を3つ出して」と頼むと——
+  </p>
+  <div class="vs-wrap" style="margin-bottom:16px;">
+    <div class="vs-box">
+      <div class="vs-title">MDがない場合</div>
+      <h3>😐 誰にでも言えそうな答え</h3>
+      <p>「チュートリアル系」「ビフォーアフター系」「日常紹介系」……間違いではないけれど、一般論。毎回ゼロから考えている状態。</p>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">MDが整っている場合</div>
+      <h3>🎯 自分の文脈に合った答え</h3>
+      <p>「平日ご飯の作り分け」「子どもが喜ぶ朝ごはん」「時短なのにちゃんと見える献立」……発信内容・ターゲット・話し方を理解した具体案が出る。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:15px; font-weight:600;">
+    家族や旧友に毎回自己紹介しないのと同じ。<span class="accent">「わかってくれている状態」を最初から作る</span>のがMDです。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">40</div>
+</div>
+
+<!-- ㊶ MD編② 2種類のMD -->
+<div class="slide bg-2">
+  <div class="section-label">MD編 ② — 2種類ある</div>
+  <h2>MDは<span class="accent">「全体共通」と「プロジェクトごと」</span>に分ける</h2>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="card o">
+      <div class="label">その1 — 全体共通のMD</div>
+      <h3>🏢 どの作業でも変わらないルール</h3>
+      <p style="margin-top:6px;">名前・仕事の概要／日本語で敬語・結論から／基本の保存先／危険な操作は事前確認——<strong>毎日変わらないもの</strong>だけを書く。</p>
+    </div>
+    <div class="card a">
+      <div class="label">その2 — プロジェクトごとのMD</div>
+      <h3>📂 その仕事だけのルール</h3>
+      <p style="margin-top:6px;">料理発信用／SNSマーケ用／講座用／LINE配信用……<strong>テーマごとに言葉づかいも目的も違う</strong>ので、それぞれに分ける。</p>
+    </div>
+  </div>
+  <div class="warn">
+    ⚠️ 全部を1つのMDに詰め込むと——「こっちは絵文字を使うの？」「この言葉づかいはどっちの話？」とClaudeが迷います。料理発信の「やわらかく親しみやすく」と、AI講座の「論理的に実務的に」は混ぜない。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">41</div>
+</div>
+
+<!-- ㊷ MD編③ 作り方 -->
+<div class="slide bg-3">
+  <div class="section-label">MD編 ③ — 作り方</div>
+  <h2>ゼロから書かない。<span class="accent">Claudeに作らせる</span></h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        MDはただのテキストファイル。そして<strong style="color:var(--text);">自分で書く必要はありません</strong>。Claudeに頼むと、仕事内容・話し方の好み・保存先などを質問してくれるので、答えるだけでたたき台ができます。<br><br>
+        質問してくれないときは、右の2つ目の頼み方でOK。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        最初は<span class="accent">5行で十分</span>。<br>
+        <span style="font-size:13px; font-weight:400; color:var(--muted);">①発信内容の自己紹介 ②敬語で ③結論から ④初心者にもわかる表現で ⑤取り返しのつかない操作は事前確認——これだけでも動きが変わります。</span>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">頼み方（コピペOK）</p>
+      <div class="terminal" style="margin-bottom:12px;">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> 私用のMDを作ってください。<br><br>
+        <span class="tg">⏺</span> 承知しました。まず教えてください。どんなお仕事をされていますか？ 話し方の好みはありますか？…
+      </div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> どのようなMDを作るべきか、私に質問してください。私はそれに答えます。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">42</div>
+</div>
+
+<!-- ㊸ MD編④ 安全ルールと追加 -->
+<div class="slide bg-1">
+  <div class="section-label">MD編 ④ — 安全ルールと育て方</div>
+  <h2>MDに必ず入れたい<span class="accent">「確認ルール」</span>と、追加の仕方</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="warn" style="margin-bottom:16px;">
+        🔒 <strong>取り返しのつかない作業は、必ず事前確認させる。</strong>公式LINEの配信は送ったら戻せません。「送信・削除・上書き・公開は実行前に必ず確認」——このルールをMDに入れておくと安心です。
+      </div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.8;">
+        使っていて「これ、毎回覚えておいてほしいな」と思ったら、その場でClaudeに伝えるだけ。<strong style="color:var(--text);">自分でファイルを編集しなくても、ClaudeがMDに追記してくれます</strong>。
+      </p>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">追加したいときの伝え方（コピペOK）</p>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> 公式LINEやメールなど外部送信する文章は、送信前に必ず確認するルールをMDに記録してください。<br><br>
+        <span class="tg">⏺</span> MDに追記しました。今後、外部送信の前には必ず内容の確認をお願いします。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">43</div>
+</div>
+
+<!-- ㊹ MD編⑤ MDとメモリ -->
+<div class="slide bg-2">
+  <div class="section-label">MD編 ⑤ — MDとメモリの違い</div>
+  <h2>MDは<span class="accent">戸籍</span>、メモリは<span class="amber">日々の記憶</span></h2>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="card o">
+      <div class="label">MD = 変わりにくいルール</div>
+      <h3>📘 戸籍・就業規則のようなもの</h3>
+      <p style="margin-top:6px;">名前・仕事の概要・基本の話し方・保存先・確認ルール・文章の基本スタイル——<strong>毎日コロコロ変わらない情報</strong>を書く。</p>
+    </div>
+    <div class="card a">
+      <div class="label">メモリ = 流動的な記録</div>
+      <h3>🗓️ 日記・作業メモのようなもの</h3>
+      <p style="margin-top:6px;">「今日はこの作業をした」「この案は保留」「次回はこの続きから」——<strong>ルールではなく日々の記録</strong>に近いもの。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    毎日の天気やその日の服を戸籍には書かない。<span class="accent">変わりにくいルールはMD、流動的な記録はメモリ</span>。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">44</div>
+</div>
+
+<!-- ㊺ MD編⑥ 薄く保つ・育てる -->
+<div class="slide bg-3">
+  <div class="section-label">MD編 ⑥ — 薄く保って育てる</div>
+  <h2>情報は<span class="accent">4つの置き場</span>に仕分ける。MDは薄いまま育てる</h2>
+  <div style="margin-bottom:16px;">
+    <div class="day-row" style="padding:12px 0;">
+      <div class="day-badge" style="min-width:150px; font-size:13px;">MD</div>
+      <p>毎回必ず必要なルールだけ（話し方・保存先・確認ルール）</p>
+    </div>
+    <div class="day-row" style="padding:12px 0;">
+      <div class="day-badge" style="min-width:150px; font-size:13px;">プロジェクトMD</div>
+      <p>そのテーマだけのルール（言葉づかい・構成・ターゲット）</p>
+    </div>
+    <div class="day-row" style="padding:12px 0;">
+      <div class="day-badge" style="min-width:150px; font-size:13px;">Notionなど外部DB</div>
+      <p>過去ログ・データ・作業フロー。MDには「まずNotionを見て」とだけ書く応用も（慣れてからでOK）</p>
+    </div>
+    <div class="day-row" style="padding:12px 0; border-bottom:none;">
+      <div class="day-badge" style="min-width:150px; font-size:13px;">メモリ・引き継ぎ</div>
+      <p>一時的な作業内容・進捗・保留事項</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-bottom:14px;">
+    <span class="ci">🎒</span>
+    <span>何でもMDに詰め込むと、毎回分厚いマニュアルを背負って歩く二宮金次郎状態に。<strong>作業前から疲れてしまいます</strong>。</span>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    Claude Codeは使いながら育てるもの。<span class="accent">「もっとこうしたい」と強欲になっていい</span>。その欲がMDを育てます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">45</div>
+</div>
+
+<!-- ㊻ コマンド・スキル編① 結論 -->
+<div class="slide bg-1">
+  <div class="section-label">コマンド・スキル編 ① — 結論</div>
+  <h2>ショートカットキーと<span class="accent">専門スタッフ</span>を手に入れる</h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">
+    MD編までは「自分のこと」を覚えてもらう段階でした。ここからは<strong style="color:var(--text);">「仕事のやり方」を覚えてもらう</strong>段階——新卒スタッフが仕事を覚えていくイメージです。
+  </p>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="card o">
+      <div class="label">スラッシュコマンド</div>
+      <div class="icon">⚡</div>
+      <h3>自分専用のショートカットキー</h3>
+      <p>毎回ほぼ同じ流れの作業を、短いコマンド1つで呼び出せるようにする。管理編で使った /clear や /compact と同じ仕組みの「自分用」が作れる。</p>
+    </div>
+    <div class="card a">
+      <div class="label">スキル</div>
+      <div class="icon">🧑‍🔧</div>
+      <h3>自分専用の専門スタッフ</h3>
+      <p>業務フローを理解して、必要に応じて<strong>判断しながら</strong>進めてくれる存在。「この業務はこういう考え方で進めてね」と覚えてもらう。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    この2つが揃うと、Claude Codeは<span class="accent">「やっておいて」の一言で動く</span>ようになります
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">46</div>
+</div>
+
+<!-- ㊼ コマンド・スキル編② スラッシュコマンド -->
+<div class="slide bg-2">
+  <div class="section-label">コマンド・スキル編 ② — スラッシュコマンド</div>
+  <h2>コマンド向き = <span class="accent">毎回ほぼ同じ流れ</span>の作業</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ コマンド化に向いている作業の例</p>
+      <div style="margin-bottom:14px;">
+        <span class="tag">サブアカ投稿の台本を作る</span>
+        <span class="tag">決まった形式の議事録を作る</span>
+        <span class="tag">いつもの形式で資料を整理する</span>
+        <span class="tag">決まった形式でリールを編集する</span>
+      </div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.8;">
+        共通点は<strong style="color:var(--text);">「流れが決まっていて、判断がほぼ変わらない」</strong>こと。マニュアルを見れば誰でもできる作業です。
+      </p>
+    </div>
+    <div>
+      <div class="kw" style="margin-bottom:14px;">
+        <div class="kw-num">リール編集の例</div>
+        <div class="kw-title">🎬 全部「いつも通り」ならコマンドでOK</div>
+        <div class="kw-desc">素材はいつもデスクトップ／音声も同じ場所／テロップのデザインも決まっている／書き出し形式も固定——なら、毎回説明せずコマンド1つで動き始める。</div>
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        「素材を見て」「台本を確認して」「編集して」「書き出して」を毎回言わなくていい。<span class="accent">これがショートカットの強さ</span>。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">47</div>
+</div>
+
+<!-- ㊽ コマンド・スキル編③ スキル -->
+<div class="slide bg-3">
+  <div class="section-label">コマンド・スキル編 ③ — スキル</div>
+  <h2>スキル向き = <span class="accent">判断が必要</span>な業務フロー</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item"><span class="who">STEP 1</span>講義動画を確認・どの講義か判断</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">STEP 2</span>YouTubeに限定公開でアップ</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">STEP 3</span>リンクを取得して会員サイトに格納</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">STEP 4</span>必要に応じて受講者へ案内</div>
+    </div>
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        たとえば「講義アーカイブを会員サイトにアップする」業務。流れはあるけれど、<strong style="color:var(--text);">どの講義か・タイトルをどうするか・案内をどう書くか</strong>など判断が入ります。しかもやり方は人それぞれ。<br><br>
+        こういう<strong style="color:var(--text);">「自分専用の業務フロー」</strong>こそスキルに覚えさせる価値があります。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        素材を選ぶ・カット位置を決める・内容に合うテロップを入れる——<span class="accent">判断が入るならスキル</span>です。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">48</div>
+</div>
+
+<!-- ㊾ コマンド・スキル編④ 使い分け -->
+<div class="slide bg-1">
+  <div class="section-label">コマンド・スキル編 ④ — 使い分け</div>
+  <h2>迷ったら<span class="accent">「マニュアル作業か、3年目の仕事か」</span></h2>
+  <div class="vs-wrap" style="margin-bottom:18px;">
+    <div class="vs-box">
+      <div class="vs-title">スラッシュコマンド</div>
+      <h3>📋 マニュアル通りの作業</h3>
+      <p>マニュアルを見れば誰でもできる。毎回ほぼ同じ流れ。<br><br><strong>例：</strong>決まった形式の台本作成、決まった場所から素材を取って決まった形式で出力する作業。</p>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">スキル</div>
+      <h3>🧑‍🔧 3年目スタッフの仕事</h3>
+      <p>状況を見ながら判断して進める。<br><br><strong>例：</strong>面談録画の整理、講義アーカイブのアップ、リール動画の編集、顧客ごとの資料整理。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    毎回ほぼ同じなら<span class="accent">コマンド</span>。状況に応じた判断が必要なら<span class="accent">スキル</span>。この基準だけでOK。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">49</div>
+</div>
+
+<!-- ㊿ コマンド・スキル編⑤ 作り方 -->
+<div class="slide bg-2">
+  <div class="section-label">コマンド・スキル編 ⑤ — 作り方</div>
+  <h2>ここでも<span class="accent">自分で作り込まなくていい</span></h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:14px;">
+        MDと同じで、難しい設定は不要。Claudeに頼めば作成をサポートしてくれます。あなたがやるのは<strong style="color:var(--text);">普段の業務を言語化すること</strong>だけ——どんな作業を、どの順番で、何を判断して、どの形で納品してほしいか。
+      </p>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ まずは「何度もやっている作業」から</p>
+      <div>
+        <span class="tag">SNS投稿の台本作成</span>
+        <span class="tag">動画編集の準備</span>
+        <span class="tag">面談議事録の作成</span>
+        <span class="tag">講義アーカイブの整理</span>
+        <span class="tag">資料の要約</span>
+        <span class="tag">顧客への案内文</span>
+        <span class="tag">会員サイトへのアップ作業</span>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">頼み方（コピペOK）</p>
+      <div class="terminal" style="margin-bottom:12px;">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> この業務をスキルにしてください。手順は次の通りです：（普段の流れを日本語で説明）<br><br>
+        <span class="tg">⏺</span> 承知しました。スキルとして登録します。判断が必要な箇所を確認させてください…
+      </div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> この流れをスラッシュコマンドにしてください。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">50</div>
+</div>
+
+<!-- 51 コマンド・スキル編⑥ 右腕になる -->
+<div class="slide bg-3">
+  <div class="section-label">コマンド・スキル編 ⑥ — 右腕へ</div>
+  <h2>スキルが増えるほど<span class="accent">「これやっておいて」</span>で動く右腕に</h2>
+  <div class="g-50-50">
+    <div>
+      <div class="kw" style="margin-bottom:14px;">
+        <div class="kw-num">面談録画の整理の例</div>
+        <div class="kw-title">📼 一度登録すれば、次からは一言</div>
+        <div class="kw-desc">録画確認→要約→議事録→限定公開アップ→リンク取得→Notionに記録……という毎回の流れも、スキル登録後は<strong>「この面談録画を整理して」だけ</strong>で、いつもの流れで進む。</div>
+      </div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.8;">
+        自分のルール・業務フロー・出力形式・判断基準を理解した状態——ここまで来ると、ただのAIではなく<strong style="color:var(--text);">自分専用の右腕</strong>です。
+      </p>
+    </div>
+    <div>
+      <div class="callout" style="margin-bottom:14px;">
+        <span class="ci">🔗</span>
+        <span><strong>将来はスキル同士をつなげて自動化も。</strong>録画が保存されたら確認→アップ→要約→会員サイト反映→通知……というパイプラインまで組めます。ただし最初から完全自動化を目指さなくてOK。</span>
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        まずは小さく、<span class="accent">「この作業を覚えて」「次から同じようにやって」</span>から。使えば使うほど、自分専用に賢くなります。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">51</div>
+</div>
+
+<!-- 52 使い分け編① 結論 -->
+<div class="slide bg-1">
+  <div class="section-label">使い分け編 ① — 結論</div>
+  <h2>Chat・Co-Act・Code・Dispatch —— <span class="accent">迷ったらCode</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:14px;">
+    つまずき対策編で見た「フードコート」の正式メンバーです（コワーク＝Co-Act）。それぞれ役割はありますが、結論はシンプル——<strong style="color:var(--text);">基本はCodeだけでOK</strong>。ショートカットは <strong>⌘ + 3</strong> でCodeタブへ。
+  </p>
+  <div style="margin-bottom:14px;">
+    <div class="day-row" style="padding:11px 0; background:var(--surface); border-radius:8px; padding-left:8px;">
+      <div class="day-badge" style="min-width:96px;">Code</div>
+      <p style="font-size:14px;"><strong style="color:var(--orange-lt);">本体。</strong>資料作成・業務整理・ファイル操作・仕組み化・スキル運用はぜんぶここ。迷ったらCode</p>
+    </div>
+    <div class="day-row" style="padding:11px 0;">
+      <div class="day-badge" style="min-width:96px;">Chat</div>
+      <p style="font-size:14px;">思考整理・軽い壁打ち。スマホからも使いやすい</p>
+    </div>
+    <div class="day-row" style="padding:11px 0;">
+      <div class="day-badge" style="min-width:96px;">Co-Act</div>
+      <p style="font-size:14px;">ChatとCodeの中間。構築後の軽い運用作業向き</p>
+    </div>
+    <div class="day-row" style="padding:11px 0; border-bottom:none;">
+      <div class="day-badge" style="min-width:96px;">Dispatch</div>
+      <p style="font-size:14px;">外出先からスマホで指示を出し、PC側で作業を動かす機能</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    <span class="accent">コードを書かない人の業務こそ、Codeタブで回ります</span>。これまでの講義内容もすべてCodeで完結。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">52</div>
+</div>
+
+<!-- 53 使い分け編② Chat -->
+<div class="slide bg-2">
+  <div class="section-label">使い分け編 ② — Chatの使いどころ</div>
+  <h2>Chatは<span class="accent">スマホからの軽い相談</span>が主戦場</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ Chatが向いている場面</p>
+      <ul class="checklist" style="margin-bottom:14px;">
+        <li style="font-size:15px;">まだ考えがまとまっていない企画の壁打ち</li>
+        <li style="font-size:15px;">スマホから投稿文・キャプションを作る</li>
+        <li style="font-size:15px;">「どっちがいい？」の気軽な相談</li>
+      </ul>
+      <p style="font-size:14px; color:var(--muted); line-height:1.7;">
+        投稿テンプレをプロジェクトにまとめておけば、外出先でパッと投げてそのまま投稿に使えます（プロジェクト分けは、つまずき対策編②の通り）。
+      </p>
+    </div>
+    <div>
+      <div class="callout" style="margin-bottom:14px;">
+        <span class="ci">💡</span>
+        <span><strong>正直、壁打ちも最初からCodeでOK。</strong>自動化・仕組み化の相談はCodeに直接投げてそのまま実装に入る方が早い。講師のChat使用頻度もかなり少なめです。</span>
+      </div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">ChatからCodeへ渡すとき（記憶は引き継がれないため）</p>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> ここまでの内容を、Codeに渡すための引き継ぎ書としてMD形式でまとめてください。<br><br>
+        <span class="tc">（Codeに移動して）</span><br>
+        <span class="tp">&gt;</span> この引き継ぎ書をもとに実装してください。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">53</div>
+</div>
+
+<!-- 54 使い分け編③ Co-ActとDispatch -->
+<div class="slide bg-3">
+  <div class="section-label">使い分け編 ③ — Co-ActとDispatch</div>
+  <h2><span class="accent">構築はCode、運用はCo-Act</span>。外からはDispatch</h2>
+  <div class="g2" style="margin-bottom:14px;">
+    <div class="card o">
+      <div class="label">初期構築 — Code</div>
+      <h3>🏗️ しっかり作り込む段階</h3>
+      <p style="margin-top:6px;">たとえば会員サイトなら：ページ構成・ファイル作成・デザイン・動作確認。ゼロから形にする作業はCodeが向いています。</p>
+    </div>
+    <div class="card a">
+      <div class="label">日々の運用 — Co-Act</div>
+      <h3>🔧 できたものへの軽い修正</h3>
+      <p style="margin-top:6px;">「トップの一文だけ変えて」「表示を修正して」「お知らせを追加して」——軽い運用作業ならCo-Actでも対応可能（もちろんCodeでもOK）。</p>
+    </div>
+  </div>
+  <div class="kw" style="margin-bottom:14px;">
+    <div class="kw-num">Dispatch</div>
+    <div class="kw-title">📱 外出先からPC側の作業を動かす</div>
+    <div class="kw-desc">移動中や出先で「あの作業を進めておきたい」に応える機能。基本はCo-Actの中で動くイメージで、複雑な実装より運用作業・軽い修正向きです。</div>
+  </div>
+  <div class="warn">
+    ⚠️ Dispatchは<strong>PCが起動している必要があります</strong>。Mac miniを常時稼働させてサーバーのように使う運用もありますが、最初はそこまで考えなくてOK。まずはCodeを使いこなすのが優先。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">54</div>
+</div>
+
+<!-- 55 使い分け編④ 実務の流れ -->
+<div class="slide bg-2">
+  <div class="section-label">使い分け編 ④ — 実務の流れ</div>
+  <h2>使う順番は<span class="accent">「壁打ち → 構築 → 運用」</span></h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item"><span class="who">STEP 1</span>壁打ち（慣れたら最初からCodeで）</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">STEP 2</span>Codeで初期構築（仕組み・ルール・コマンド・スキル）</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">STEP 3</span>運用（Co-Act／Dispatchも選択肢に）</div>
+    </div>
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        名前が4つも並ぶと迷いますが、<strong style="color:var(--text);">全部を完璧に使い分けようとすると逆に混乱します</strong>。<br><br>
+        まずはCode中心 → 必要になったらChat → 運用フェーズに入ったらCo-ActやDispatchを検討。この順番で十分です。
+      </p>
+      <div class="hl" style="font-size:16px; font-weight:600;">
+        最初に覚えるべきことは1つだけ：<br>
+        <span class="accent">Claude Codeは、基本的にCodeで完結する</span>。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">55</div>
+</div>
+
+<!-- 56 仕上げ編① 個別最適化 -->
+<div class="slide bg-1">
+  <div class="section-label">仕上げ編 ① — 個別最適化</div>
+  <h2>目指すのは道具ではなく、<span class="accent">「もう一人の自分」</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:14px;">
+    ここまでの使い方を覚えただけでは、まだ「あとやっといて」で動く状態にはなりません。本当に業務へ組み込むには<strong style="color:var(--text);">個別最適化＝自分専用に育てる</strong>ことが必要です。
+  </p>
+  <div class="vs-wrap" style="margin-bottom:16px;">
+    <div class="vs-box">
+      <div class="vs-title">知らない人に頼む</div>
+      <h3>📋 毎回細かく説明が必要</h3>
+      <p>「この目的で」「このトーンで」「この順番で」「最後はこうまとめて」——考え方も判断基準も知らないから、都度伝えないと動けない。</p>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">もう一人の自分</div>
+      <h3>🧠 一言で高精度に動く</h3>
+      <p>思想・判断基準・これまでの流れ・大事にしてきたことを理解している。だから短い指示でも、自分が出しそうな答えを返す。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:15px; font-weight:600;">
+    AIに理解させるのは——<span class="accent">自分の考え方・判断基準・仕事の進め方・文章のクセ・今とこれから</span>。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">56</div>
+</div>
+
+<!-- 57 仕上げ編② データベース -->
+<div class="slide bg-2">
+  <div class="section-label">仕上げ編 ② — データベース</div>
+  <h2><span class="accent">データベース</span>があるから、自分のように動ける</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.8; margin-bottom:12px;">
+        「あとやっといて」で動かない理由は、AIが参照する情報が足りないから。Notionなどに<strong style="color:var(--text);">これまで話したこと・作ったもの・考えたこと</strong>を蓄積すると、文脈を理解して動けます。
+      </p>
+      <div style="margin-bottom:6px;">
+        <span class="tag">過去の発信内容</span>
+        <span class="tag">商品・講義の情報</span>
+        <span class="tag">施策の狙い</span>
+        <span class="tag">自分の判断基準</span>
+        <span class="tag">文章のトーン</span>
+        <span class="tag">面談・添削の記録</span>
+      </div>
+    </div>
+    <div>
+      <div class="callout" style="margin-bottom:14px;">
+        <span class="ci">⚠️</span>
+        <span><strong>全部入れればいいわけではない。</strong>仕事も大事にすることも人それぞれ。「何を・どの粒度で蓄積し、どの業務とつなぐか」の設計が肝。講師も何度も作り直しています。</span>
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        「LINE配信作って」ではなく、<span class="accent">過去の発信・商品設計・顧客理解・今の施策を踏まえた「これを伝えたいから作って」</span>——完成物の精度がまるで変わります。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">57</div>
+</div>
+
+<!-- 58 仕上げ編③ MCP/API連携 -->
+<div class="slide bg-3">
+  <div class="section-label">仕上げ編 ③ — MCP・API連携</div>
+  <h2><span class="accent">ツールをつなぐ</span>と、AIが業務環境の中に入ってくる</h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:14px;">
+    MCPやAPIは、Claude Codeと各種ツールをつなぐ仕組み。連携すると、文章を作るだけでなく<strong style="color:var(--text);">情報を取りに行き・参照し・作り・紐づける</strong>ところまで横断でできます。
+  </p>
+  <div style="margin-bottom:16px; text-align:center;">
+    <span class="tag">Notion</span>
+    <span class="tag">Google Drive</span>
+    <span class="tag">Gmail</span>
+    <span class="tag">Googleカレンダー</span>
+    <span class="tag">Zoom</span>
+    <span class="tag">LINE公式</span>
+    <span class="tag">Instagram</span>
+    <span class="tag">YouTube</span>
+  </div>
+  <div class="g2">
+    <div class="card o">
+      <div class="label">例1 — リール台本</div>
+      <p style="font-size:14px; color:var(--text);">「流行のフォーマットを調べて、自分のジャンルに合わせて台本を」——<strong>自分が考えそうな内容</strong>として出てくる。</p>
+    </div>
+    <div class="card a">
+      <div class="label">例2 — 議事録整理</div>
+      <p style="font-size:14px; color:var(--text);">Zoomの録画を受講生ごとに整理し、プロフィール・過去の添削と紐づけ、次回サポートに活かす。</p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">58</div>
+</div>
+
+<!-- 59 仕上げ編④ 業務委託との違い・第二領域 -->
+<div class="slide bg-1">
+  <div class="section-label">仕上げ編 ④ — 働き方が変わる</div>
+  <h2>純度が薄まらない。そして<span class="accent">第二領域</span>に時間が生まれる</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 業務委託との違い</p>
+      <ul class="checklist" style="margin-bottom:14px;">
+        <li style="font-size:15px;">直前でも動かせる（30分前に「構成作って」）</li>
+        <li style="font-size:15px;">気を使わず何度でも修正できる</li>
+        <li style="font-size:15px;">自分の思想が薄まらず、高い純度で引き継げる</li>
+      </ul>
+      <p style="font-size:14px; color:var(--muted); line-height:1.7;">
+        外注は薄めて渡す感覚。育てたAIは<strong style="color:var(--text);">高い純度のまま、もう一人の自分に渡す</strong>感覚です。
+      </p>
+    </div>
+    <div>
+      <div class="hl" style="margin-bottom:14px;">
+        <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">⏰ 空いた時間は「第二領域」へ</p>
+        <p style="font-size:15px;">緊急ではないが重要な仕事——サービス設計・顧客面談・講義改善・新施策・今後の方向性を考える時間。ここに時間を使えると、仕事の質が変わります。</p>
+      </div>
+      <div class="callout">
+        <span class="ci">🚀</span>
+        <span>暇になるのではなく、<strong>もっと仕事ができる</strong>ように。「あれやってみたい」をすぐ形にできるスピード感が手に入ります。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">59</div>
+</div>
+
+<!-- 60 仕上げ編⑤ 締め -->
+<div class="slide bg-2">
+  <div class="section-label">仕上げ編 ⑤ — 最後に</div>
+  <h2>非エンジニアこそ。<span class="accent">自分だけのAI秘書</span>を持とう</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.8; margin-bottom:12px;">
+        大事なのは使い方を覚えることではなく、<strong style="color:var(--text);">自分の業務にどう組み込み、考え方をどう反映させ、どこまで自分専用に仕上げるか</strong>。最適な形は人によってまったく違います。
+      </p>
+      <div>
+        <span class="tag">SNS発信</span>
+        <span class="tag">店舗運営</span>
+        <span class="tag">講座・スクール</span>
+        <span class="tag">副業</span>
+        <span class="tag">本業の効率化</span>
+        <span class="tag">日々の業務</span>
+      </div>
+    </div>
+    <div>
+      <div class="hl center" style="font-size:17px; font-weight:700; line-height:1.7;">
+        しっかり育てれば、Claude Codeは<br><span class="accent">もう一人の自分のように動くAI秘書</span>になる。<br>
+        <span style="font-size:14px; font-weight:400; color:var(--muted);">これを持てるかどうかで、これからの働き方は大きく変わります。</span>
+      </div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:18px;">
+    <span class="ci">🧭</span>
+    <span>ここまでが「使い方」の教科書。ここからは視点を変えて——<strong>経営者が法人全体でAIをどう位置づけるか</strong>を見ていきます。個人の右腕づくりが、法人の司令塔づくりにつながります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">60</div>
+</div>
+
+<!-- 61 従来の発想 -->
+<div class="slide bg-1">
+  <div class="section-label">発想の転換 — その前に</div>
+  <h2>従来の「IT導入」は、なぜ<span class="accent">定着しない</span>のか</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="card r">
+      <div class="label">コスト</div>
+      <h3>IT費用・経費として計上</h3>
+      <p>「使いすぎ」「削減対象」と見られ、コストを削る話になりがち。</p>
+    </div>
+    <div class="card r">
+      <div class="label">導入目的</div>
+      <h3>「生産性向上」「業務効率化」</h3>
+      <p>目的が抽象的なまま導入され、何を任せるかが決まっていない。</p>
+    </div>
+    <div class="card r">
+      <div class="label">責任の所在</div>
+      <h3>システム会社・ベンダー任せ</h3>
+      <p>自分ごとにならず、うまくいかない理由も外に求めてしまう。</p>
+    </div>
+    <div class="card r">
+      <div class="label">現場の反応</div>
+      <h3>「また新しいツールか…」</h3>
+      <p>現場にとっては負担が増えるだけの存在に見えてしまう。</p>
+    </div>
+    <div class="card r">
+      <div class="label">使い方</div>
+      <h3>マニュアルを読んで操作する</h3>
+      <p>覚えることが増え、使いこなせる人が限られてしまう。</p>
+    </div>
+    <div class="card r">
+      <div class="label">成果</div>
+      <h3>数字に出にくい・定着しにくい</h3>
+      <p>効果が見えないまま、いつの間にか使われなくなる。</p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">61</div>
+</div>
+
+<!-- ㉟ 新しい発想 -->
+<div class="slide bg-2">
+  <div class="section-label">発想の転換 — 本プログラムの見方</div>
+  <h2>「優秀なスタッフを<span class="accent">1人雇う</span>」と考える</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="card o">
+      <div class="label">コスト</div>
+      <h3>トークン費 = 人件費</h3>
+      <p>経費ではなく「AI職員の給料」として把握する。</p>
+    </div>
+    <div class="card o">
+      <div class="label">導入目的</div>
+      <h3>「この職員に何を任せるか」</h3>
+      <p>採用面接と同じ。任せる仕事を決めてから迎え入れる。</p>
+    </div>
+    <div class="card o">
+      <div class="label">責任の所在</div>
+      <h3>理事長が雇用主</h3>
+      <p>設計も運用も雇用主である理事長自身が担う。</p>
+    </div>
+    <div class="card o">
+      <div class="label">現場の反応</div>
+      <h3>「仕事を手伝ってくれる存在」</h3>
+      <p>ツールではなく同僚。現場の味方として迎えられる。</p>
+    </div>
+    <div class="card o">
+      <div class="label">使い方</div>
+      <h3>指示を出す・任せる・確認する</h3>
+      <p>マニュアル不要。部下に仕事を頼むのと同じ感覚。</p>
+    </div>
+    <div class="card o">
+      <div class="label">成果</div>
+      <h3>明確な成果物・定着しやすい</h3>
+      <p>毎回「できあがった文書・資料」が残るので効果が見える。</p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:20px; font-size:16px; font-weight:600;">
+    同じお金・同じ道具でも、<span class="accent">「雇う」と考えるだけで使い方が変わる</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">62</div>
+</div>
+
+<!-- ㊱ 対話型AI -->
+<div class="slide bg-3">
+  <div class="section-label">違いを知る ①</div>
+  <h2>対話型AI（チャット）は<span class="accent">「1問1答」</span>で終わる</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item"><span class="who">人間</span>質問する</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>答えを返す</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">—</span>終わり</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:20px;">
+        さきほどの「ブラウザの中のAI」がこのタイプです。聞けば答えてくれる<strong style="color:var(--text);">優秀な相談相手</strong>。<br><br>
+        ただし答えを返したら、そこで止まります。次に進めるには、<strong style="color:var(--text);">人間がまた次の指示を出す</strong>必要があります。
+      </p>
+      <div class="warn">
+        ⚠️ 質問するたびに人が付きっきりになる。「相談はできるが、仕事は任せられない」状態。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">63</div>
+</div>
+
+<!-- ㊲ エージェントAI -->
+<div class="slide bg-1">
+  <div class="section-label">違いを知る ②</div>
+  <h2>エージェントAI（Claude Code）は<span class="accent">完成まで自分で動く</span></h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item hot"><span class="who">人間</span>「ゴール」を指示する</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>自分で手順を考える</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>調べ・まとめ・作る</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>確認を求めてくる</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">人間</span>承認して完成</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:20px;">
+        Claude Code は「答えを返す」だけでなく、<strong style="color:var(--text);">手順を考え、調べ、資料を作るところまで</strong>自分で進めます。<br><br>
+        人間の役割は<strong style="color:var(--text);">最初のゴール指示と、最後の承認</strong>の2つだけ。途中は任せられます。
+      </p>
+      <div class="hl">
+        ⚡ 一度指示すれば、完成まで自分で動き続ける。<br>
+        だから「相談相手」ではなく<strong class="accent">「職員」として雇える</strong>のです。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">64</div>
+</div>
+
+<!-- ㊳ トークンコスト = 人件費 -->
+<div class="slide bg-2">
+  <div class="section-label">費用の話 ① — トークンコスト = 人件費</div>
+  <h2>コストの<span class="accent">"見え方"</span>を変えると、判断基準が変わる</h2>
+  <div style="text-align:center; margin-bottom:28px;">
+    <span class="big" style="font-size:44px;">トークン費用</span>
+    <span style="font-size:40px; font-weight:800; color:var(--muted2); margin:0 20px;">=</span>
+    <span class="big" style="font-size:44px;">AI職員の人件費</span>
+  </div>
+  <div class="g2">
+    <div class="card r">
+      <div class="label">IT費・経費として見ると…</div>
+      <h3>😞 現場が使いにくくなる</h3>
+      <p style="margin-top:6px;">「使いすぎ」「削減対象」「コスト管理が面倒」——コストを削る対象になり、活用が進まない。</p>
+    </div>
+    <div class="card o">
+      <div class="label">人件費として見ると…</div>
+      <h3>💪 費用対効果で判断できる</h3>
+      <p style="margin-top:6px;">「この職員（AI）は何時間働いたか」「その成果に見合っているか」——人を雇うときと同じ物差しで判断できる。</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:20px;">
+    <span class="ci">💡</span>
+    <span>トークンとは、AIが文章を処理する単位のこと。使った分だけ費用がかかります。つまり<strong>「AIが働いた時間」に応じて払う給料</strong>のようなものです。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">65</div>
+</div>
+
+<!-- ㊴ 月3万円の例 -->
+<div class="slide bg-3">
+  <div class="section-label">費用の話 ② — 法人でフル活用するなら</div>
+  <h2>月3万円で<span class="accent">「毎日8時間働く職員」</span>を1人雇えるとしたら</h2>
+  <div style="text-align:center; margin:12px 0 28px;">
+    <span class="big">月3万円</span>
+    <span style="font-size:36px; font-weight:800; color:var(--muted2); margin:0 24px;">≒</span>
+    <span class="big" style="font-size:48px;">毎日8時間働く<br>AI職員 1名分</span>
+  </div>
+  <div class="g2">
+    <div class="card w">
+      <div class="label">人間の職員なら</div>
+      <p style="font-size:15px; color:var(--text);">常勤職員1名の人件費は月20〜30万円以上。採用・教育にも時間とコストがかかる。</p>
+    </div>
+    <div class="card o">
+      <div class="label">AI職員なら</div>
+      <p style="font-size:15px; color:var(--text);">月数万円で、調査・下書き・整理などの作業を毎日こなす。深夜でも休日でも働ける。</p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:20px; font-size:16px; font-weight:600;">
+    「高いか安いか」ではなく<span class="accent">「この給料に見合う働きをしているか」</span>で判断する
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">66</div>
+</div>
+
+<!-- ㊵ 知恵 ─ AIに任せる作業 -->
+<div class="slide bg-1">
+  <div class="section-label">任せ方を知る ① — 知恵（作業）</div>
+  <h2><span class="accent">AIに任せる仕事</span> = 知恵（作業）</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="kw">
+      <div class="kw-title">🔍 情報収集・調査</div>
+      <div class="kw-desc">指定したテーマを調べ、要点をまとめる</div>
+    </div>
+    <div class="kw">
+      <div class="kw-title">✍️ 文書の下書き</div>
+      <div class="kw-desc">事業計画書・補助金申請・通知文などの初稿作成</div>
+    </div>
+    <div class="kw">
+      <div class="kw-title">📊 データの整理</div>
+      <div class="kw-desc">会議資料の構造化・表形式への変換</div>
+    </div>
+    <div class="kw">
+      <div class="kw-title">🔁 繰り返し作業</div>
+      <div class="kw-desc">同じ形式の書類を大量に処理する</div>
+    </div>
+    <div class="kw">
+      <div class="kw-title">📝 議事録の要約</div>
+      <div class="kw-desc">会議の録音や記録を整理・要約する</div>
+    </div>
+    <div class="kw">
+      <div class="kw-title">📋 規程のチェック</div>
+      <div class="kw-desc">法令・内規との整合性を確認する</div>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:24px; font-size:16px; font-weight:600;">
+    共通点：<span class="accent">手順が決まっていて、正解の形がある仕事</span>。時間はかかるが、判断は要らない。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">67</div>
+</div>
+
+<!-- ㊶ 智慧 ─ 人間が担う判断 -->
+<div class="slide bg-2">
+  <div class="section-label">任せ方を知る ② — 智慧（判断）</div>
+  <h2><span class="amber">人間が担う仕事</span> = 智慧（判断）</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);">
+      <div class="kw-title">✅ 最終判断・承認</div>
+      <div class="kw-desc">下書きを読み、内容が正しいか確認し承認する</div>
+    </div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);">
+      <div class="kw-title">🤲 倫理的判断</div>
+      <div class="kw-desc">ご利用者・ご家族への影響を考慮した決断</div>
+    </div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);">
+      <div class="kw-title">🤝 関係性の構築</div>
+      <div class="kw-desc">職員・地域・行政との信頼関係を育む</div>
+    </div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);">
+      <div class="kw-title">👀 現場の空気感</div>
+      <div class="kw-desc">数字に表れない違和感や変化に気づく</div>
+    </div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);">
+      <div class="kw-title">🌱 理念の体現</div>
+      <div class="kw-desc">法人の使命を言葉と行動で示し続ける</div>
+    </div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);">
+      <div class="kw-title">🛡️ 責任の引き受け</div>
+      <div class="kw-desc">全ての意思決定の最終責任を担う</div>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:24px; font-size:16px; font-weight:600;">
+    共通点：<span class="amber">人と向き合い、責任を引き受ける仕事</span>。これはAIには渡せない。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">68</div>
+</div>
+
+<!-- ㊷ 役割分担まとめ -->
+<div class="slide bg-3">
+  <div class="section-label">任せ方を知る — まとめ</div>
+  <h2>切り分けの結論は、<span class="accent">この1行</span></h2>
+  <div class="vs-wrap" style="margin-bottom:24px;">
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">AI（Claude Code）</div>
+      <h3>「知恵の外注先」</h3>
+      <p>調べる・書く・整理する。<br>時間のかかる作業を一手に引き受ける。</p>
+    </div>
+    <div class="vs-divider">×</div>
+    <div class="vs-box">
+      <div class="vs-title" style="color:#A16207;">理事長（人間）</div>
+      <h3>「智慧の決定者」</h3>
+      <p>読む・判断する・責任を取る。<br>最終決定は常に人間が行う。</p>
+    </div>
+  </div>
+  <div class="callout">
+    <span class="ci">💡</span>
+    <span>この切り分けができていれば、「AIに仕事を奪われる」心配はありません。AIが作業を巻き取るほど、<strong>人間は判断と人に向き合う時間を取り戻せます</strong>。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">69</div>
+</div>
+
+<!-- ㊸ 経営の三層戦略 -->
+<div class="slide bg-1">
+  <div class="section-label">経営の三層戦略</div>
+  <h2>現場に<span class="accent">PhAI</span> ／ 連携に<span class="accent">Google</span> ／ 経営に<span class="accent">Claude Code</span></h2>
+  <div style="margin-top:8px;">
+    <div class="day-row" style="padding:18px 0;">
+      <div class="day-badge" style="min-width:72px; font-size:13px;">経営</div>
+      <div>
+        <h3 style="font-size:19px; margin-bottom:4px;">Claude Code</h3>
+        <p style="font-size:14px; color:var(--muted);">理事長が直接操作。経営判断の下書き、AI職員の設計・発注、法人全体のAI活用をマネジメントする司令塔。</p>
+      </div>
+    </div>
+    <div class="day-row" style="padding:18px 0;">
+      <div class="day-badge" style="min-width:72px; font-size:13px;">連携</div>
+      <div>
+        <h3 style="font-size:19px; margin-bottom:4px;">Google Workspace</h3>
+        <p style="font-size:14px; color:var(--muted);">カレンダー・ドキュメント・スプレッドシートなど既存ツールと接続。現場と経営をデータでつなぐ橋渡し役。</p>
+      </div>
+    </div>
+    <div class="day-row" style="padding:18px 0;">
+      <div class="day-badge" style="min-width:72px; font-size:13px;">現場</div>
+      <div>
+        <h3 style="font-size:19px; margin-bottom:4px;">PhAI カスタムチャット</h3>
+        <p style="font-size:14px; color:var(--muted);">介護記録・申し送り・ご家族対応など現場業務を直接支援。各事業所のニーズに合わせて内製したAIが活躍。</p>
+      </div>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:24px; font-size:16px; font-weight:600;">
+    3層がそれぞれ機能し、Googleでつながることで<span class="accent">法人全体のAI活用基盤</span>が完成する
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">70</div>
+</div>
+
+<!-- ㊹ 6つの力（前半） -->
+<div class="slide bg-2">
+  <div class="section-label">Claude Code で経営者ができること（前半）</div>
+  <h2>経営の道具として使う<span class="accent">6つの力</span> — まず3つ</h2>
+  <div class="g3" style="gap:16px; margin-top:8px;">
+    <div class="card o">
+      <div class="icon">🧑‍💼</div>
+      <h3>① AI職員を設計する</h3>
+      <p>どんな仕事を任せるか、役割・ルール・禁止事項を設定する。<br><br><span style="color:var(--orange-lt);">例：「議事録要約係」「補助金調査係」を作る</span></p>
+    </div>
+    <div class="card o">
+      <div class="icon">📝</div>
+      <h3>② 文書を量産する</h3>
+      <p>事業計画・補助金申請・通知文・議事録・報告書の下書きを一気に作る。<br><br><span style="color:var(--orange-lt);">例：保護者向け通知文を5分で3案</span></p>
+    </div>
+    <div class="card o">
+      <div class="icon">📊</div>
+      <h3>③ データを整理する</h3>
+      <p>会議資料・稼働率・収支など、バラバラの情報を即座に構造化する。<br><br><span style="color:var(--orange-lt);">例：手書きメモを表形式の資料に変換</span></p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:24px; font-size:15px;">
+    ここまでは「作業を任せる」力。次の3つで<span class="accent">「仕組みを作る」力</span>に進みます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">71</div>
+</div>
+
+<!-- ㊺ 6つの力（後半） -->
+<div class="slide bg-3">
+  <div class="section-label">Claude Code で経営者ができること（後半）</div>
+  <h2>「コードを書く」ツールではない — <span class="accent">残り3つ</span></h2>
+  <div class="g3" style="gap:16px; margin-top:8px;">
+    <div class="card a">
+      <div class="icon">🛠️</div>
+      <h3>④ アプリを作る</h3>
+      <p>コード不要。対話するだけで集計ツール・チェックリストが生成される。<br><br><span style="color:var(--orange-lt);">例：出席集計ツールを会話だけで作る</span></p>
+    </div>
+    <div class="card a">
+      <div class="icon">🔗</div>
+      <h3>⑤ 外部とつなぐ</h3>
+      <p>Google・PhAIと接続し、現場データを経営判断に活用する。<br><br><span style="color:var(--orange-lt);">例：スプレッドシートの稼働率を自動分析</span></p>
+    </div>
+    <div class="card a">
+      <div class="icon">🎯</div>
+      <h3>⑥ 発注力を磨く</h3>
+      <p>本格的なアプリ開発は専門家へ。的確に依頼できる「発注主」になる。<br><br><span style="color:var(--orange-lt);">例：要件を自分の言葉で整理してから依頼</span></p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:24px; font-size:15px;">
+    6つとも<span class="accent">「経営者が自分の言葉で使う」</span>力。プログラミングの知識は一切不要です。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">72</div>
+</div>
+
+<!-- ㊻ AI職員を「雇う」5ステップ -->
+<div class="slide bg-1">
+  <div class="section-label">AI職員を「雇う」とはどういうことか</div>
+  <h2><span class="accent">採用・育成・管理</span>という人材マネジメントの発想で運用する</h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div>
+      <h3>採用する</h3>
+      <p>Claude Code に「あなたはこういう職員です」と役割を与える（CLAUDE.md の作成）</p>
+    </div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div>
+      <h3>仕事を教える</h3>
+      <p>業務の手順・法人のルール・禁止事項を記憶させ、スキルとして登録する</p>
+    </div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div>
+      <h3>仕事を任せる</h3>
+      <p>ゴールを指示するだけで、AIが自律的に調べ・考え・作り・報告してくる</p>
+    </div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">4</div>
+    <div>
+      <h3>成果を確認する</h3>
+      <p>人間はAIの出力を確認・修正・承認するだけ。最終判断は常に人間が行う</p>
+    </div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">5</div>
+    <div>
+      <h3>育てる・増やす</h3>
+      <p>仕事を通じてルールを改善し、新しい職員を追加していく。組織のように育てる</p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">73</div>
+</div>
+
+<!-- ㊼ 到達確認チェックリスト -->
+<div class="slide bg-2">
+  <div class="section-label">第1回 — 到達確認</div>
+  <h2>今日の<span class="accent">到達確認チェックリスト</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:14px;">
+    以下の17個を自分の言葉で説明できれば、第1回の内容は身についています。
+  </p>
+  <ul class="checklist">
+    <li style="font-size:15px; padding:6px 0 6px 28px;">Claude Code が「PCの中で動くAI」だと説明できる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">「仕事を奪うのはAIではなく、AIを使える人」の意味がわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">3つの使い方（ブラウザ／デスクトップ／ターミナル）の違いと、デスクトップ版から始める理由が言える</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">セッション＝作業ごとの「部屋」という使い方がわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">プランモードで計画を確認してから承認する流れがわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">MD＝マニュアル、コンテキスト＝仕事量の例えで説明できる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">5〜6割で引き継ぎを書いてセッションを切り替える理由がわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">チャットとコードの記憶は引き継がれない（フードコートの例え）とわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">つまずいたら「コード／わかりません／スクショ」の3つを思い出せる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">普段はSonnet・考える仕事はOpus・迷ったら3段運用、の使い分けがわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">MDは5行から。Claudeに作らせて育てる／メモリ＝流動的な記録との違いがわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">毎回同じ作業はスラッシュコマンド、判断が要る業務はスキル、の違いがわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">迷ったらCode。Chat＝思考整理、Co-Act＝軽い運用、Dispatch＝外出先から、がわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">データベース連携で「もう一人の自分」に育てる個別最適化の考え方がわかる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">「IT導入」と「AI雇用」の違いが言える</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">知恵（作業）と智慧（判断）を区別できる</li>
+    <li style="font-size:15px; padding:6px 0 6px 28px;">Claude Code を使って最初の対話を体験した</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">74</div>
+</div>
+
+<!-- ㊽ 宿題・次回予告 -->
+<div class="slide bg-3">
+  <div class="section-label">第1回 — 宿題・次回予告</div>
+  <h2>次回までの<span class="accent">3つの宿題</span></h2>
+  <div style="margin-bottom:24px;">
+    <div class="day-row" style="padding:14px 0;">
+      <div class="day-badge">宿題 1</div>
+      <p>「AI職員に任せたい経営業務」を<strong>3つ</strong>書き出す</p>
+    </div>
+    <div class="day-row" style="padding:14px 0;">
+      <div class="day-badge">宿題 2</div>
+      <p>現場の暗黙のルール・常識を<strong>5つ</strong>書き留めておく</p>
+    </div>
+    <div class="day-row" style="padding:14px 0; border-bottom:none;">
+      <div class="day-badge">宿題 3</div>
+      <p>作業用フォルダを作り、プランモードで<strong>デスクトップ整理デモ</strong>を試す。終わったら<strong>引き継ぎを書いて新しいセッション</strong>に切り替えてみる</p>
+    </div>
+  </div>
+  <div class="hl" style="margin-bottom:16px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">🔜 次回（第2回）のテーマ</p>
+    <p style="font-size:18px; font-weight:700; margin-bottom:6px;">環境設定と CLAUDE.md ― AI職員の「就業規則」を書く</p>
+    <p style="font-size:14px; color:var(--muted);">法人の理念・用語・禁止事項をAIに常時記憶させます。宿題1・2がそのまま「就業規則」の材料になります。今日学んだ「MD＝マニュアル」の考え方が土台です。</p>
+  </div>
+  <div class="callout">
+    <span class="ci">🎒</span>
+    <span><strong>次回までに準備しておくもの：</strong>PC ／ メールアドレス ／ Claudeのアカウント（お持ちでない方は次回一緒に登録するので大丈夫です）。順番に進めれば、ちゃんと使えるようになります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">75</div>
+</div>
+
+<!-- ナビゲーション -->
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 75</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key))    go(-1);
+  });
+
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラムA 第5回｜アプリの作り方① ― 経営の道具を自分で組み立てる</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --orange:#D97757; --orange-lt:#C15F3C; --orange-dk:#A8481F; --amber:#E39440;
+  --bg:#FFFFFF; --bg2:#FAF9F5; --surface:rgba(217,119,87,0.07); --border:rgba(217,119,87,0.32);
+  --border-lt:#E8E4DD; --text:#29261F; --muted:#6E6759; --muted2:#9C948A;
+  --mono:'SF Mono','Menlo','Monaco','Courier New',monospace;
+}
+body { font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic Medium',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; }
+.slide { display:none; width:100vw; height:100vh; padding:52px 72px 72px; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.slide.active { display:flex; animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+.bg-1 { background:radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background:var(--bg2); }
+.bg-3 { background:radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+.slide::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%); opacity:.9; }
+.slide-num { position:absolute; bottom:28px; right:52px; font-size:12px; font-family:var(--mono); color:var(--muted2); letter-spacing:2px; }
+h1 { font-size:54px; font-weight:800; line-height:1.15; letter-spacing:-.02em; }
+h2 { font-size:38px; font-weight:700; line-height:1.2; margin-bottom:32px; letter-spacing:-.01em; }
+h3 { font-size:20px; font-weight:600; line-height:1.4; }
+p { line-height:1.7; }
+.accent { color:var(--orange-lt); } .amber { color:#A16207; } .muted { color:var(--muted); }
+.section-label { display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:2px; font-family:var(--mono); color:var(--orange-lt); margin-bottom:16px; }
+.section-label::before { content:'❯'; color:var(--orange); font-weight:800; }
+.tag { display:inline-block; background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 3px; }
+.card { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:14px; padding:24px 20px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.card.o { border-left:3px solid var(--orange); } .card.a { border-left:3px solid var(--amber); } .card.g { border-left:3px solid #16A34A; } .card.r { border-left:3px solid #DC2626; } .card.w { border-left:3px solid var(--muted2); }
+.card .icon { font-size:28px; margin-bottom:10px; }
+.card .label { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); color:var(--muted2); margin-bottom:6px; }
+.card h3 { font-size:18px; margin-bottom:8px; }
+.card p { font-size:14px; color:var(--muted); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g-50-50 { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.checklist { list-style:none; }
+.checklist li { font-size:17px; color:var(--text); padding:10px 0 10px 28px; border-bottom:1px solid var(--border-lt); position:relative; line-height:1.5; }
+.checklist li::before { content:'✓'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+.step { display:flex; align-items:flex-start; gap:18px; padding:18px 0; border-bottom:1px solid var(--border-lt); }
+.step:last-child { border-bottom:none; }
+.step-num { min-width:40px; height:40px; background:linear-gradient(135deg, var(--orange), var(--amber)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; flex-shrink:0; }
+.step h3 { font-size:19px; margin-bottom:5px; } .step p { font-size:14px; color:var(--muted); }
+.hl { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 22px; font-size:15px; line-height:1.7; color:var(--text); }
+.hl.center { text-align:center; }
+.flow { display:flex; flex-direction:column; align-items:center; gap:0; }
+.flow-item { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:12px; padding:14px 28px; font-size:17px; font-weight:600; text-align:center; min-width:420px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.flow-item.hot { background:var(--surface); border-color:var(--orange); }
+.flow-item .who { font-size:11px; letter-spacing:2px; color:var(--muted2); font-family:var(--mono); display:block; margin-bottom:2px; }
+.flow-item.hot .who { color:var(--orange-lt); }
+.flow-arrow { font-size:18px; color:var(--muted2); padding:6px 0; }
+.vs-wrap { display:grid; grid-template-columns:1fr 48px 1fr; gap:0; align-items:stretch; margin-top:8px; }
+.vs-box { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:16px; padding:28px 24px; text-align:center; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.vs-box.highlight-box { background:var(--surface); border-color:var(--orange); }
+.vs-box .vs-title { font-size:11px; letter-spacing:3px; font-family:var(--mono); color:var(--muted2); margin-bottom:10px; }
+.vs-box h3 { font-size:24px; font-weight:700; margin-bottom:14px; }
+.vs-box p { font-size:14px; color:var(--muted); line-height:1.7; }
+.vs-divider { display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--muted2); }
+.day-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--border-lt); }
+.day-row:last-child { border-bottom:none; }
+.day-badge { min-width:56px; background:var(--surface); border:1px solid var(--border); border-radius:7px; text-align:center; padding:5px 0; font-size:12px; font-weight:700; color:var(--orange-dk); flex-shrink:0; }
+.day-row p { font-size:15px; color:var(--text); }
+.warn { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:12px 18px; font-size:14px; color:#B91C1C; }
+.kw { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:10px; padding:16px 18px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.kw .kw-num { font-size:10px; color:var(--orange-lt); font-weight:700; letter-spacing:1px; font-family:var(--mono); margin-bottom:4px; }
+.kw .kw-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+.kw .kw-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+.footer-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity:.6; }
+.callout { display:flex; align-items:flex-start; gap:12px; background:rgba(227,148,64,0.08); border:1px solid rgba(227,148,64,0.35); border-radius:10px; padding:14px 18px; font-size:14px; color:var(--text); line-height:1.6; }
+.callout .ci { font-size:18px; flex-shrink:0; }
+.terminal { background:#1F1D1A; border-radius:14px; padding:18px 22px 20px; font-family:var(--mono); font-size:13.5px; line-height:1.85; color:#E8E4DD; box-shadow:0 8px 24px rgba(41,38,31,0.18); }
+.terminal .dots { display:flex; gap:7px; margin-bottom:12px; }
+.terminal .dots span { width:11px; height:11px; border-radius:50%; }
+.terminal .dots span:nth-child(1) { background:#FF5F57; } .terminal .dots span:nth-child(2) { background:#FEBC2E; } .terminal .dots span:nth-child(3) { background:#28C840; }
+.terminal .cm { color:#9C948A; } .terminal .kw2 { color:#D97757; font-weight:700; } .terminal .st { color:#7BC97E; } .terminal .tp { color:#D97757; font-weight:700; }
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+.appwin { background:#fff; border:1px solid var(--border-lt); border-radius:12px; overflow:hidden; box-shadow:0 8px 24px rgba(41,38,31,0.12); }
+.appwin .bar { background:var(--bg2); border-bottom:1px solid var(--border-lt); padding:9px 14px; font-size:12px; color:var(--muted); font-family:var(--mono); }
+.appwin .body { padding:18px 20px; }
+.appwin .barrow { display:flex; align-items:center; gap:10px; margin:8px 0; }
+.appwin .barlabel { font-size:13px; color:var(--text); min-width:70px; }
+.appwin .bartrack { flex:1; height:14px; background:var(--surface); border-radius:7px; overflow:hidden; }
+.appwin .barfill { height:100%; background:linear-gradient(90deg, var(--orange), var(--amber)); }
+.appwin .barval { font-size:13px; font-weight:700; color:var(--orange-lt); min-width:38px; text-align:right; }
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border:1px solid var(--border-lt); border-radius:50px; padding:8px 18px; box-shadow:0 4px 16px rgba(41,38,31,0.10); z-index:100; }
+.nav button { background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.nav button:hover { background:var(--orange); color:#fff; border-color:var(--orange); }
+.nav-cnt { font-size:13px; font-family:var(--mono); color:var(--muted); min-width:56px; text-align:center; }
+.progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--orange), var(--amber)); transition:width .3s ease; z-index:200; }
+@media print { @page { size:1920px 1080px; margin:0; } *,*::before,*::after { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } html,body { width:1920px; height:1080px; overflow:visible; background:#FFFFFF !important; } .nav,.progress { display:none !important; } .slide { display:none !important; } .slide.active { display:flex !important; width:1920px !important; height:1080px !important; padding:72px 108px 100px !important; position:relative !important; overflow:hidden !important; animation:none !important; } }
+.big { font-size:72px; font-weight:900; color:var(--orange-lt); line-height:1.2; }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="pill">PROGRAM A ・ 第5回 / 全9回</div>
+      <h1>アプリの作り方 ①<br><span class="accent">経営の道具を組む</span></h1>
+      <p style="font-size:20px; color:var(--muted); margin-top:14px; line-height:1.6;">
+        ― コードが書けなくても、対話でツールを生成
+      </p>
+      <p style="font-size:16px; color:var(--muted); margin-top:10px; line-height:1.7;">
+        対話を通じて“その場で動く”業務ツール（アプリ）を生成できるようになる
+      </p>
+      <div style="margin-top:24px;">
+        <span class="tag">社会福祉法人ふるさと 御中</span>
+        <span class="tag">Claude Code 経営者養成</span>
+      </div>
+    </div>
+    <div>
+      <div class="appwin">
+        <div class="bar">● ● ●　行事アンケート集計ツール</div>
+        <div class="body">
+          <div class="barrow"><span class="barlabel">とても満足</span><span class="bartrack"><span class="barfill" style="width:62%;"></span></span><span class="barval">62%</span></div>
+          <div class="barrow"><span class="barlabel">満足</span><span class="bartrack"><span class="barfill" style="width:28%;"></span></span><span class="barval">28%</span></div>
+          <div class="barrow"><span class="barlabel">普通</span><span class="bartrack"><span class="barfill" style="width:8%;"></span></span><span class="barval">8%</span></div>
+          <div class="barrow"><span class="barlabel">要改善</span><span class="bartrack"><span class="barfill" style="width:2%;"></span></span><span class="barval">2%</span></div>
+        </div>
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin-top:10px; text-align:center;">↑ 対話するだけで、こうした集計ツールが生成できます</p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 前回の振り返り -->
+<div class="slide bg-2">
+  <div class="section-label">前回（第4回）の振り返り</div>
+  <h2>定型業務が<span class="accent">仕組み</span>になりました</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">おさらい 1</div><div class="kw-title">📗 スキル＝手順書</div><div class="kw-desc">繰り返す仕事を手順書として登録しました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 2</div><div class="kw-title">⚡ スラッシュコマンド</div><div class="kw-desc">「/月次理事会資料」でワンタッチ実行できるようにしました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 3</div><div class="kw-title">🤝 属人化の解消</div><div class="kw-desc">誰が呼んでも同じ品質。法人の“やり方”を資産に残しました。</div></div>
+  </div>
+  <div class="callout" style="margin-top:22px;">
+    <span class="ci">🛠️</span>
+    <span>ここまでは「文書・作業」を任せる話。今日からは<strong>「道具（アプリ）」そのものを、コードなしで自分で作る</strong>——経営の武器を増やすステップです。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 今回のねらい -->
+<div class="slide bg-3">
+  <div class="section-label">第5回 ― ねらい</div>
+  <h2>今回、身につけていただく<span class="accent">3つのこと</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">ねらい 1</div><div class="kw-title">🧩 アプリを対話で作る</div><div class="kw-desc">アーティファクト＝対話から生成される簡易ツール。集計表・チェックリスト・ダッシュボード。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 2</div><div class="kw-title">🔒 安全に試す範囲</div><div class="kw-desc">個人情報を入れない試作から始める。まずはダミーデータで動きを確認。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 3</div><div class="kw-title">🌱 「方便」としてのアプリ</div><div class="kw-desc">完璧を求めず、現場の負担を減らす道具として使う。作って試して、直せばいい。</div></div>
+  </div>
+  <div class="hl" style="margin-top:22px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🎯 第5回の到達目標</p>
+    <p style="font-size:16px; font-weight:600;">対話で業務ツールを生成する ― 「行事アンケート集計ツール」など、簡易アプリを1本作り、動作を確認する。</p>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ アーティファクトとは -->
+<div class="slide bg-1">
+  <div class="section-label">アプリの作り方 ①</div>
+  <h2>アプリは<span class="accent">「対話するだけ」</span>で生まれる</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item hot"><span class="who">あなた</span>「こういうツールが欲しい」と話す</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">Claude Code</span>その場で動くツールを生成</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">あなた</span>使ってみて「ここ直して」と伝える</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        アーティファクトとは、<strong style="color:var(--text);">対話から生成される簡易ツール</strong>のこと。コードを書く必要はありません。作りたいものを言葉で伝えるだけです。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        修正も「この列を右に」「合計を足して」と<span class="accent">自然な日本語でお願いするだけ</span>。作りながら育てられます。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ どんな道具が作れるか -->
+<div class="slide bg-2">
+  <div class="section-label">アプリの作り方 ② ― 何が作れるか</div>
+  <h2>まずはこの<span class="accent">3種類</span>から</h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o"><div class="icon">📊</div><h3>集計表</h3><p>アンケート結果・稼働状況などを入れると、自動で集計・グラフ化する。</p></div>
+    <div class="card o"><div class="icon">☑️</div><h3>チェックリスト</h3><p>行事準備・点検項目など、抜け漏れを防ぐ確認ツール。印刷もできる。</p></div>
+    <div class="card o"><div class="icon">📈</div><h3>簡易ダッシュボード</h3><p>数値をひと目で把握する画面。月次の推移や比較を見やすく表示。</p></div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    どれも<span class="accent">「現場のちょっとした手間」</span>を減らす道具。大きなシステムでなくていいのがポイントです。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ 方便としてのアプリ -->
+<div class="slide bg-3">
+  <div class="section-label">大切な考え方 ― 「方便」としてのアプリ</div>
+  <h2>完璧を求めない。<span class="accent">現場の負担を減らせれば十分</span></h2>
+  <div class="vs-wrap" style="margin-bottom:18px;">
+    <div class="vs-box">
+      <div class="vs-title">陥りやすい発想</div>
+      <h3>🏗️ 完璧なシステムを作る</h3>
+      <p>あれもこれもと機能を盛り、完成まで時間もお金もかかる。結局使われないことも。</p>
+    </div>
+    <div class="vs-divider">→</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">本プログラムの発想</div>
+      <h3>🌱 方便（手だて）として使う</h3>
+      <p>まず小さく作り、現場で試し、直す。<strong style="color:var(--text);">目的はケアの質向上（NEXT KAIGO）</strong>。アプリはその手だて。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    「作って終わり」ではなく<span class="accent">「使いながら直す」</span>。だから、まず1本作ってみることが大事です。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ 安全に試す -->
+<div class="slide bg-1">
+  <div class="section-label">安全に試す範囲</div>
+  <h2>試作は<span class="accent">「個人情報を入れない」</span>ところから</h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card r"><div class="icon">🚫</div><h3>実データは入れない</h3><p>ご利用者名・記録の実データは試作に使わない。仮名・ダミーで動きを確認。</p></div>
+    <div class="card a"><div class="icon">🧪</div><h3>まず試作で確かめる</h3><p>いきなり本番投入しない。小さく作り、動作と使い勝手を試してから広げる。</p></div>
+    <div class="card g"><div class="icon">✋</div><h3>現場検証を挟む</h3><p>実際に使う職員に触ってもらい、負担が減るかを確認。合わなければ直す。</p></div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    第2回のCLAUDE.md（就業規則）＋この試作ルールで、<span class="accent">安心してどんどん試せます</span>。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ 例：行事アンケート集計ツール -->
+<div class="slide bg-2">
+  <div class="section-label">設計例 ― 行事アンケート集計ツール</div>
+  <h2>この1本を<span class="accent">対話で作る</span></h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="terminal">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="tp">&gt;</span> 行事後アンケートの集計ツールを作って。<br>
+      <span class="st">　満足度（4段階）を入力すると、</span><br>
+      <span class="st">　割合を棒グラフで表示。自由記述は</span><br>
+      <span class="st">　一覧で並べる。個人名は使わない。</span><br><br>
+      <span class="st">⏺ 集計ツールを生成しました。</span><br>
+      <span class="st">　ブラウザで開いて動作を確認できます。</span><br><br>
+      <span class="tp">&gt;</span> グラフの色を法人カラーに合わせて。<br>
+      <span class="st">⏺ 修正しました。</span>
+    </div>
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        欲しいものを話す → 生成される → 使って直す。この繰り返しだけで、<strong style="color:var(--text);">現場で使える集計ツール</strong>が出来上がります。
+      </p>
+      <div class="callout">
+        <span class="ci">💡</span>
+        <span>本格的な機能や、大人数で使う本番システムが必要になったら——第8回で「専門家へ発注」する道も学びます。まずは自分で試作から。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ ハンズオン -->
+<div class="slide bg-3">
+  <div class="section-label">第5回 ― ハンズオン</div>
+  <h2>簡易アプリを<span class="accent">1本、一緒に作る</span></h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div><h3>作りたい道具を言葉にする</h3><p>「行事アンケート集計ツール」など、現場のちょっとした手間を選び、欲しい形を話します。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div><h3>生成して、動かしてみる</h3><p>ダミーデータを入れて動作を確認。集計・グラフ表示が想定通りかを見ます。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div><h3>その場で直す</h3><p>「色を変えて」「項目を追加して」と伝え、対話で改良。作りながら育てる感覚を体験します。</p></div>
+  </div>
+  <div class="callout" style="margin-top:16px;">
+    <span class="ci">✅</span>
+    <span><strong>成果物：</strong>簡易アプリ1本（動作確認済み）。「コードなしで道具が作れる」という手応えを持ち帰ります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 到達確認 -->
+<div class="slide bg-1">
+  <div class="section-label">第5回 ― 到達確認</div>
+  <h2>今日の<span class="accent">到達確認チェックリスト</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">以下を自分の言葉で説明できれば、第5回の内容は身についています。</p>
+  <ul class="checklist">
+    <li>アーティファクト＝対話から生成される簡易ツールだとわかる</li>
+    <li>集計表・チェックリスト・ダッシュボードが作れると言える</li>
+    <li>「方便」＝完璧を求めず現場の負担を減らす道具、の発想がわかる</li>
+    <li>個人情報を入れない試作から始める安全ルールがわかる</li>
+    <li>簡易アプリを1本作り、動作を確認した</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<!-- ⑪ 宿題・次回予告 -->
+<div class="slide bg-2">
+  <div class="section-label">第5回 ― 宿題・次回予告</div>
+  <h2>宿題・成果物と、<span class="accent">次回のご案内</span></h2>
+  <div class="hl" style="margin-bottom:20px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">📝 次回までの宿題・成果物</p>
+    <p style="font-size:18px; font-weight:700;">ほしいアプリのアイデアを「誰が・何に困り・どうなれば成功か」で言語化する</p>
+    <p style="font-size:14px; color:var(--muted); margin-top:6px;">この3点で書けると、自分で作るときも、専門家へ発注するとき（第8回）も、そのまま要件になります。</p>
+  </div>
+  <div class="g-50-50">
+    <div class="card o">
+      <div class="label">次回（第6回）のテーマ</div>
+      <h3>アプリの作り方② ― データ連携と外部接続（MCP）</h3>
+      <p style="margin-top:6px;">Google や PhAI など既存の道具とつなぎ、実務で使える形に発展させます。承認を挟む安全な運用も。</p>
+    </div>
+    <div class="callout">
+      <span class="ci">🔗</span>
+      <span>単体で動く道具（第5回）から、<strong>既存ツールとつながる道具（第6回）</strong>へ。三層戦略の「連携にGoogle」が形になります。</span>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">11</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 11</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

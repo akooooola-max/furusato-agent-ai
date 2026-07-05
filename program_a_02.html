@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラムA 第2回｜環境設定とCLAUDE.md ― AI職員の「就業規則」を書く</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --orange:#D97757; --orange-lt:#C15F3C; --orange-dk:#A8481F; --amber:#E39440;
+  --bg:#FFFFFF; --bg2:#FAF9F5; --surface:rgba(217,119,87,0.07); --border:rgba(217,119,87,0.32);
+  --border-lt:#E8E4DD; --text:#29261F; --muted:#6E6759; --muted2:#9C948A;
+  --mono:'SF Mono','Menlo','Monaco','Courier New',monospace;
+}
+body { font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic Medium',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; }
+.slide { display:none; width:100vw; height:100vh; padding:52px 72px 72px; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.slide.active { display:flex; animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+.bg-1 { background:radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background:var(--bg2); }
+.bg-3 { background:radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+.slide::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%); opacity:.9; }
+.slide-num { position:absolute; bottom:28px; right:52px; font-size:12px; font-family:var(--mono); color:var(--muted2); letter-spacing:2px; }
+h1 { font-size:54px; font-weight:800; line-height:1.15; letter-spacing:-.02em; }
+h2 { font-size:38px; font-weight:700; line-height:1.2; margin-bottom:32px; letter-spacing:-.01em; }
+h3 { font-size:20px; font-weight:600; line-height:1.4; }
+p { line-height:1.7; }
+.accent { color:var(--orange-lt); } .amber { color:#A16207; } .muted { color:var(--muted); }
+.section-label { display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:2px; font-family:var(--mono); color:var(--orange-lt); margin-bottom:16px; }
+.section-label::before { content:'❯'; color:var(--orange); font-weight:800; }
+.tag { display:inline-block; background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 3px; }
+.card { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:14px; padding:24px 20px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.card.o { border-left:3px solid var(--orange); } .card.a { border-left:3px solid var(--amber); } .card.g { border-left:3px solid #16A34A; } .card.r { border-left:3px solid #DC2626; } .card.w { border-left:3px solid var(--muted2); }
+.card .icon { font-size:28px; margin-bottom:10px; }
+.card .label { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); color:var(--muted2); margin-bottom:6px; }
+.card h3 { font-size:18px; margin-bottom:8px; }
+.card p { font-size:14px; color:var(--muted); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g-50-50 { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.checklist { list-style:none; }
+.checklist li { font-size:17px; color:var(--text); padding:10px 0 10px 28px; border-bottom:1px solid var(--border-lt); position:relative; line-height:1.5; }
+.checklist li::before { content:'✓'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+.step { display:flex; align-items:flex-start; gap:18px; padding:18px 0; border-bottom:1px solid var(--border-lt); }
+.step:last-child { border-bottom:none; }
+.step-num { min-width:40px; height:40px; background:linear-gradient(135deg, var(--orange), var(--amber)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; flex-shrink:0; }
+.step h3 { font-size:19px; margin-bottom:5px; } .step p { font-size:14px; color:var(--muted); }
+.hl { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 22px; font-size:15px; line-height:1.7; color:var(--text); }
+.hl.center { text-align:center; }
+.flow { display:flex; flex-direction:column; align-items:center; gap:0; }
+.flow-item { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:12px; padding:14px 28px; font-size:17px; font-weight:600; text-align:center; min-width:420px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.flow-item.hot { background:var(--surface); border-color:var(--orange); }
+.flow-item .who { font-size:11px; letter-spacing:2px; color:var(--muted2); font-family:var(--mono); display:block; margin-bottom:2px; }
+.flow-item.hot .who { color:var(--orange-lt); }
+.flow-arrow { font-size:18px; color:var(--muted2); padding:6px 0; }
+.vs-wrap { display:grid; grid-template-columns:1fr 48px 1fr; gap:0; align-items:stretch; margin-top:8px; }
+.vs-box { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:16px; padding:28px 24px; text-align:center; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.vs-box.highlight-box { background:var(--surface); border-color:var(--orange); }
+.vs-box .vs-title { font-size:11px; letter-spacing:3px; font-family:var(--mono); color:var(--muted2); margin-bottom:10px; }
+.vs-box h3 { font-size:24px; font-weight:700; margin-bottom:14px; }
+.vs-box p { font-size:14px; color:var(--muted); line-height:1.7; }
+.vs-divider { display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--muted2); }
+.day-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--border-lt); }
+.day-row:last-child { border-bottom:none; }
+.day-badge { min-width:56px; background:var(--surface); border:1px solid var(--border); border-radius:7px; text-align:center; padding:5px 0; font-size:12px; font-weight:700; color:var(--orange-dk); flex-shrink:0; }
+.day-row p { font-size:15px; color:var(--text); }
+.warn { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:12px 18px; font-size:14px; color:#B91C1C; }
+.kw { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:10px; padding:16px 18px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.kw .kw-num { font-size:10px; color:var(--orange-lt); font-weight:700; letter-spacing:1px; font-family:var(--mono); margin-bottom:4px; }
+.kw .kw-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+.kw .kw-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+.footer-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity:.6; }
+.callout { display:flex; align-items:flex-start; gap:12px; background:rgba(227,148,64,0.08); border:1px solid rgba(227,148,64,0.35); border-radius:10px; padding:14px 18px; font-size:14px; color:var(--text); line-height:1.6; }
+.callout .ci { font-size:18px; flex-shrink:0; }
+.terminal { background:#1F1D1A; border-radius:14px; padding:18px 22px 20px; font-family:var(--mono); font-size:13.5px; line-height:1.85; color:#E8E4DD; box-shadow:0 8px 24px rgba(41,38,31,0.18); }
+.terminal .dots { display:flex; gap:7px; margin-bottom:12px; }
+.terminal .dots span { width:11px; height:11px; border-radius:50%; }
+.terminal .dots span:nth-child(1) { background:#FF5F57; } .terminal .dots span:nth-child(2) { background:#FEBC2E; } .terminal .dots span:nth-child(3) { background:#28C840; }
+.terminal .cm { color:#9C948A; } .terminal .kw2 { color:#D97757; font-weight:700; } .terminal .st { color:#7BC97E; }
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border:1px solid var(--border-lt); border-radius:50px; padding:8px 18px; box-shadow:0 4px 16px rgba(41,38,31,0.10); z-index:100; }
+.nav button { background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.nav button:hover { background:var(--orange); color:#fff; border-color:var(--orange); }
+.nav-cnt { font-size:13px; font-family:var(--mono); color:var(--muted); min-width:56px; text-align:center; }
+.progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--orange), var(--amber)); transition:width .3s ease; z-index:200; }
+@media print { @page { size:1920px 1080px; margin:0; } *,*::before,*::after { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } html,body { width:1920px; height:1080px; overflow:visible; background:#FFFFFF !important; } .nav,.progress { display:none !important; } .slide { display:none !important; } .slide.active { display:flex !important; width:1920px !important; height:1080px !important; padding:72px 108px 100px !important; position:relative !important; overflow:hidden !important; animation:none !important; } }
+.big { font-size:72px; font-weight:900; color:var(--orange-lt); line-height:1.2; }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="pill">PROGRAM A ・ 第2回 / 全9回</div>
+      <h1>環境設定と<br><span class="accent">CLAUDE.md</span></h1>
+      <p style="font-size:20px; color:var(--muted); margin-top:14px; line-height:1.6;">
+        ― AI職員の「就業規則」を書く
+      </p>
+      <p style="font-size:16px; color:var(--muted); margin-top:10px; line-height:1.7;">
+        自分専用の作業環境を整え、法人の理念・用語・禁止事項をAIに常時記憶させる
+      </p>
+      <div style="margin-top:24px;">
+        <span class="tag">社会福祉法人ふるさと 御中</span>
+        <span class="tag">Claude Code 経営者養成</span>
+      </div>
+    </div>
+    <div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="cm"># CLAUDE.md（ふるさと版・就業規則）</span><br><br>
+        <span class="kw2">## 私たちの理念</span><br>
+        <span class="st">- NEXT KAIGO ―科学的・自立支援的なケア</span><br><br>
+        <span class="kw2">## 話し方</span><br>
+        <span class="st">- 敬語・ですます調で</span><br><br>
+        <span class="kw2">## やってはいけないこと</span><br>
+        <span class="st">- 個人情報（ご利用者名等）を入力しない</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 前回の振り返り -->
+<div class="slide bg-2">
+  <div class="section-label">前回（第1回）の振り返り</div>
+  <h2>「導入」から<span class="accent">「雇用」</span>へ ― 発想の転換を確認</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">おさらい 1</div><div class="kw-title">💡 導入ではなく雇用</div><div class="kw-desc">トークンコスト＝人件費。AIを「職員」として雇う発想に切り替えました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 2</div><div class="kw-title">🔁 自律ループ</div><div class="kw-desc">ゴールを指示すれば、調べ・作り・確認まで自分で動くのがエージェントAI。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 3</div><div class="kw-title">⚖️ 知恵と智慧</div><div class="kw-desc">作業（知恵）はAIへ、判断（智慧）は人へ。切り分けが基本。</div></div>
+  </div>
+  <div class="callout" style="margin-top:22px;">
+    <span class="ci">📝</span>
+    <span><strong>宿題の確認：</strong>「AI職員に任せたい経営業務」を3つ書き出していただきました。今日は、その職員を迎える前の<strong>「就業規則づくり」</strong>から始めます。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 今回のねらい -->
+<div class="slide bg-3">
+  <div class="section-label">第2回 ― ねらい</div>
+  <h2>今回、身につけていただく<span class="accent">3つのこと</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">ねらい 1</div><div class="kw-title">📁 作業環境を整える</div><div class="kw-desc">プロジェクト（作業フォルダ）の考え方。AI職員が働く「職場」を用意します。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 2</div><div class="kw-title">📘 就業規則を書く</div><div class="kw-desc">CLAUDE.md＝常時読み込まれるルール。法人理念・用語・禁止事項を記憶させます。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 3</div><div class="kw-title">🔒 安全に使う土台</div><div class="kw-desc">個人情報の扱い方・シャドーAI禁止。安全管理措置と整合させます。</div></div>
+  </div>
+  <div class="hl" style="margin-top:22px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🎯 第2回の到達目標</p>
+    <p style="font-size:16px; font-weight:600;">法人ルールをAIに記憶させる ― ふるさと版 CLAUDE.md を完成させ、以降どのセッションでも自動で守られる状態にする。</p>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ プロジェクト＝作業フォルダ -->
+<div class="slide bg-1">
+  <div class="section-label">設定の全体像 ①</div>
+  <h2>プロジェクト = AI職員が働く<span class="accent">「職場（作業フォルダ）」</span></h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        Claude Code は、指定した<strong style="color:var(--text);">フォルダの中</strong>で作業します。これが「プロジェクト」。<br><br>
+        いきなりPC全体を触らせるのではなく、<strong style="color:var(--text);">「ここで働いてください」</strong>と職場を決めておく。これが安全と整理の基本です。
+      </p>
+      <div class="warn">⚠️ 大事なファイルがある場所は指定しない。まずは新しい作業用フォルダ（例：<strong>ふるさとAI業務</strong>）を用意します。</div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 業務ごとにフォルダを分けると便利</p>
+      <div>
+        <span class="tag">理事会・会議資料</span>
+        <span class="tag">補助金・申請文書</span>
+        <span class="tag">通知・お知らせ文</span>
+        <span class="tag">議事録・記録の整理</span>
+      </div>
+      <div class="hl" style="margin-top:16px; font-size:15px; font-weight:600;">
+        そして各フォルダに<span class="accent">CLAUDE.md</span>を1枚置く。<br>これが、その職場の「就業規則」になります。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ CLAUDE.md＝就業規則 -->
+<div class="slide bg-2">
+  <div class="section-label">CLAUDE.md とは ①</div>
+  <h2>CLAUDE.md = <span class="accent">毎回読み込まれる「就業規則」</span></h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item hot"><span class="who">出勤（セッション開始）</span>AI職員が来る</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">まず読む</span>CLAUDE.md（就業規則）</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">そして</span>ルール通りに作業を始める</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        新しく来た職員に、まず<strong style="color:var(--text);">お店のマニュアル</strong>を渡すのと同じ。CLAUDE.md は、AI職員が<strong style="color:var(--text);">作業を始める前に必ず読むルール</strong>です。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        一度書いておけば、毎回「敬語で」「この保存先で」と<span class="accent">説明し直す必要がなくなる</span>。全セッションで自動的に守られます。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ 書く3カテゴリ -->
+<div class="slide bg-3">
+  <div class="section-label">CLAUDE.md とは ②</div>
+  <h2>就業規則に書くのは、この<span class="accent">3カテゴリ</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="card o">
+      <div class="icon">🌱</div>
+      <h3>① 法人の理念・前提</h3>
+      <p>NEXT KAIGO、科学的自立支援介護の考え方。「何のために働くか」を共有し、判断の軸をそろえる。</p>
+    </div>
+    <div class="card a">
+      <div class="icon">📖</div>
+      <h3>② 専門用語・話し方</h3>
+      <p>科学的自立支援介護〈水分・栄養・歩行・排泄〉などの用語集。敬語・ですます調・現場に合う言葉づかい。</p>
+    </div>
+    <div class="card r">
+      <div class="icon">🚫</div>
+      <h3>③ やってはいけないこと</h3>
+      <p>個人情報を入力しない／削除・上書き・外部送信は必ず事前確認／指定フォルダ外を触らない。</p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:22px; font-size:16px; font-weight:600;">
+    分厚くしすぎない。<span class="accent">必要なことを、必要な分だけ</span>。読むだけで疲れる規則は、かえって精度を下げます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ ふるさと版サンプル -->
+<div class="slide bg-1">
+  <div class="section-label">ハンズオンの完成イメージ</div>
+  <h2>ふるさと版 CLAUDE.md の<span class="accent">中身（例）</span></h2>
+  <div class="g-50-50" style="align-items:start;">
+    <div class="terminal">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="cm"># CLAUDE.md</span><br><br>
+      <span class="kw2">## 私たちの理念（NEXT KAIGO）</span><br>
+      <span class="st">- 科学的・自立支援的なケアの質向上が目的</span><br>
+      <span class="st">- AIは目的ではなく「方便（手だて）」</span><br><br>
+      <span class="kw2">## 話し方</span><br>
+      <span class="st">- 日本語・敬語・ですます調</span><br>
+      <span class="st">- 結論から簡潔に</span><br><br>
+      <span class="kw2">## 用語集</span><br>
+      <span class="st">- 科学的自立支援介護＝水分・栄養・歩行・排泄</span><br>
+      <span class="st">- 誤嚥性肺炎ゼロ＝専門的口腔ケア</span><br><br>
+      <span class="kw2">## やってはいけないこと</span><br>
+      <span class="st">- ご利用者名・記録の実データを入力しない</span><br>
+      <span class="st">- 送信・削除・公開の前は必ず確認する</span>
+    </div>
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        今日のハンズオンで、この骨子を<strong style="color:var(--text);">実際に一緒に作ります</strong>。理事長のお言葉で理念を語っていただき、AIが構造化します。
+      </p>
+      <div class="callout">
+        <span class="ci">💡</span>
+        <span>ゼロから書く必要はありません。<strong>「ふるさと版のCLAUDE.mdを作りたい。質問してください」</strong>と伝えれば、AIが順に質問し、たたき台を作ってくれます。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ 個人情報の扱い -->
+<div class="slide bg-2">
+  <div class="section-label">安全に使う ― 個人情報の扱い</div>
+  <h2>便利だからこそ、<span class="accent">安全ルールを先に</span>決める</h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card r">
+      <div class="label">原則 1</div>
+      <h3>🔒 実データを入れない</h3>
+      <p>ご利用者名・介護記録の実データは入力しない。試すときは仮名・ダミーで。</p>
+    </div>
+    <div class="card r">
+      <div class="label">原則 2</div>
+      <h3>🚫 シャドーAI禁止</h3>
+      <p>個人が勝手に無許可のAIへ実データを入れない。法人の管理下で、決めたルールに沿って使う。</p>
+    </div>
+    <div class="card r">
+      <div class="label">原則 3</div>
+      <h3>📋 安全管理措置と整合</h3>
+      <p>個人情報保護法・法人の安全管理措置と矛盾しない運用。承認を挟む前提で進める。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    これらを<span class="accent">CLAUDE.md の「やってはいけないこと」</span>に明記しておけば、AI職員が毎回自動で守ります。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ ハンズオン -->
+<div class="slide bg-3">
+  <div class="section-label">第2回 ― ハンズオン</div>
+  <h2>ふるさと版 CLAUDE.md を<span class="accent">一緒に作る</span></h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div><h3>作業フォルダを用意する</h3><p>「ふるさとAI業務」フォルダを作り、Claude Code の作業場所に指定します。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div><h3>理念・用語・禁止事項をAIに語る</h3><p>「ふるさと版のCLAUDE.mdを作りたい」と伝え、AIの質問に答える形で、NEXT KAIGO・科学的自立支援介護の用語・禁止事項を整理。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div><h3>保存して、効き目を確認する</h3><p>保存後、別のセッションで簡単な通知文を頼み、敬語・用語・禁止事項が自動で守られることを確認します。</p></div>
+  </div>
+  <div class="callout" style="margin-top:16px;">
+    <span class="ci">✅</span>
+    <span><strong>成果物：</strong>ふるさと版 CLAUDE.md（法人理念・NEXT KAIGO・用語集・禁止事項を記述）。これが第3回以降の全AI職員の土台になります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 到達確認 -->
+<div class="slide bg-1">
+  <div class="section-label">第2回 ― 到達確認</div>
+  <h2>今日の<span class="accent">到達確認チェックリスト</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">以下を自分の言葉で説明できれば、第2回の内容は身についています。</p>
+  <ul class="checklist">
+    <li>プロジェクト（作業フォルダ）＝AI職員の「職場」だとわかる</li>
+    <li>CLAUDE.md＝毎回読み込まれる「就業規則」だと説明できる</li>
+    <li>就業規則の3カテゴリ（理念／用語・話し方／禁止事項）が言える</li>
+    <li>個人情報を入れない・シャドーAI禁止の理由がわかる</li>
+    <li>ふるさと版 CLAUDE.md を作成し、効き目を確認した</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<!-- ⑪ 宿題・次回予告 -->
+<div class="slide bg-2">
+  <div class="section-label">第2回 ― 宿題・次回予告</div>
+  <h2>宿題・成果物と、<span class="accent">次回のご案内</span></h2>
+  <div class="hl" style="margin-bottom:20px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">📝 次回までの宿題・成果物</p>
+    <p style="font-size:18px; font-weight:700;">現場の“暗黙のルール・常識”を聞き取り、CLAUDE.md に追記する</p>
+    <p style="font-size:14px; color:var(--muted); margin-top:6px;">例：申し送りの言い回し／記録の書き方の作法／事業所ごとの呼称。現場に眠る「言葉にしていないルール」を規則に足していきます。</p>
+  </div>
+  <div class="g-50-50">
+    <div class="card o">
+      <div class="label">次回（第3回）のテーマ</div>
+      <h3>AI職員の作り方① ― 役割（サブエージェント）設計</h3>
+      <p style="margin-top:6px;">「議事録要約職員」「規程チェック職員」など、特定業務に特化した専門AIを複数つくり、用途で使い分けます。</p>
+    </div>
+    <div class="callout">
+      <span class="ci">🏗️</span>
+      <span>第2回で作った就業規則（CLAUDE.md）が、これから作るすべてのAI職員に共通で効きます。今日が<strong>全AI職員の土台</strong>です。</span>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">11</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 11</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

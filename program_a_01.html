@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラムA 第1回｜「導入」から「雇用」へ ― エージェントAIとは何か</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --orange:     #D97757;
+  --orange-lt:  #C15F3C;
+  --orange-dk:  #A8481F;
+  --amber:      #E39440;
+  --bg:         #FFFFFF;
+  --bg2:        #FAF9F5;
+  --surface:    rgba(217,119,87,0.07);
+  --border:     rgba(217,119,87,0.32);
+  --border-lt:  #E8E4DD;
+  --text:       #29261F;
+  --muted:      #6E6759;
+  --muted2:     #9C948A;
+  --mono:       'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+body {
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  user-select: none;
+}
+
+.slide {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  padding: 52px 72px 72px;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.slide.active { display: flex; animation: fadeUp .35s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+.bg-1 { background: radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background: var(--bg2); }
+.bg-3 { background: radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+
+.slide::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+  background: linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%);
+  opacity: .9;
+}
+.slide-num { position: absolute; bottom: 28px; right: 52px; font-size: 12px; font-family: var(--mono); color: var(--muted2); letter-spacing: 2px; }
+
+h1 { font-size: 54px; font-weight: 800; line-height: 1.15; letter-spacing: -.02em; }
+h2 { font-size: 38px; font-weight: 700; line-height: 1.2; margin-bottom: 32px; letter-spacing: -.01em; }
+h3 { font-size: 20px; font-weight: 600; line-height: 1.4; }
+p  { line-height: 1.7; }
+
+.accent { color: var(--orange-lt); }
+.amber  { color: #A16207; }
+.muted  { color: var(--muted); }
+
+.section-label {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 700; letter-spacing: 2px; font-family: var(--mono);
+  color: var(--orange-lt); margin-bottom: 16px;
+}
+.section-label::before { content: '❯'; color: var(--orange); font-weight: 800; }
+
+.tag {
+  display: inline-block; background: var(--surface); border: 1px solid var(--border);
+  color: var(--orange-dk); padding: 5px 14px; border-radius: 20px; font-size: 13px; margin: 4px 3px;
+}
+
+.card {
+  background: #FFFFFF; border: 1px solid var(--border-lt); border-radius: 14px;
+  padding: 24px 20px; box-shadow: 0 1px 3px rgba(41,38,31,0.05);
+}
+.card.o { border-left: 3px solid var(--orange); }
+.card.a { border-left: 3px solid var(--amber); }
+.card.g { border-left: 3px solid #16A34A; }
+.card.r { border-left: 3px solid #DC2626; }
+.card.w { border-left: 3px solid var(--muted2); }
+.card .icon { font-size: 28px; margin-bottom: 10px; }
+.card .label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-family: var(--mono); color: var(--muted2); margin-bottom: 6px; }
+.card h3 { font-size: 18px; margin-bottom: 8px; }
+.card p { font-size: 14px; color: var(--muted); }
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g-50-50 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+
+.checklist { list-style: none; }
+.checklist li {
+  font-size: 17px; color: var(--text); padding: 10px 0 10px 28px;
+  border-bottom: 1px solid var(--border-lt); position: relative; line-height: 1.5;
+}
+.checklist li::before { content: '✓'; position: absolute; left: 0; color: var(--orange); font-weight: 700; }
+
+.step { display: flex; align-items: flex-start; gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--border-lt); }
+.step:last-child { border-bottom: none; }
+.step-num {
+  min-width: 40px; height: 40px; background: linear-gradient(135deg, var(--orange), var(--amber));
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.step h3 { font-size: 19px; margin-bottom: 5px; }
+.step p { font-size: 14px; color: var(--muted); }
+
+.hl { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; font-size: 15px; line-height: 1.7; color: var(--text); }
+.hl.center { text-align: center; }
+
+.vs-wrap { display: grid; grid-template-columns: 1fr 48px 1fr; gap: 0; align-items: stretch; margin-top: 8px; }
+.vs-box { background: #FFFFFF; border: 1px solid var(--border-lt); border-radius: 16px; padding: 28px 24px; text-align: center; box-shadow: 0 1px 3px rgba(41,38,31,0.05); }
+.vs-box.highlight-box { background: var(--surface); border-color: var(--orange); }
+.vs-box .vs-title { font-size: 11px; letter-spacing: 3px; font-family: var(--mono); color: var(--muted2); margin-bottom: 10px; }
+.vs-box h3 { font-size: 24px; font-weight: 700; margin-bottom: 14px; }
+.vs-box p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+.vs-divider { display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: var(--muted2); }
+
+.flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.flow-item { background: #FFFFFF; border: 1px solid var(--border-lt); border-radius: 12px; padding: 14px 28px; font-size: 17px; font-weight: 600; text-align: center; min-width: 420px; box-shadow: 0 1px 3px rgba(41,38,31,0.05); }
+.flow-item.hot { background: var(--surface); border-color: var(--orange); }
+.flow-item .who { font-size: 11px; letter-spacing: 2px; color: var(--muted2); font-family: var(--mono); display: block; margin-bottom: 2px; }
+.flow-item.hot .who { color: var(--orange-lt); }
+.flow-arrow { font-size: 18px; color: var(--muted2); padding: 6px 0; }
+
+.day-row { display: flex; align-items: center; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--border-lt); }
+.day-row:last-child { border-bottom: none; }
+.day-badge { min-width: 56px; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; text-align: center; padding: 5px 0; font-size: 12px; font-weight: 700; color: var(--orange-dk); flex-shrink: 0; }
+.day-row p { font-size: 15px; color: var(--text); }
+
+.warn { background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.25); border-radius: 10px; padding: 12px 18px; font-size: 14px; color: #B91C1C; }
+
+.kw { background: #FFFFFF; border: 1px solid var(--border-lt); border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(41,38,31,0.05); }
+.kw .kw-num { font-size: 10px; color: var(--orange-lt); font-weight: 700; letter-spacing: 1px; font-family: var(--mono); margin-bottom: 4px; }
+.kw .kw-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.kw .kw-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+.footer-line { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity: .6; }
+
+.callout { display: flex; align-items: flex-start; gap: 12px; background: rgba(227,148,64,0.08); border: 1px solid rgba(227,148,64,0.35); border-radius: 10px; padding: 14px 18px; font-size: 14px; color: var(--text); line-height: 1.6; }
+.callout .ci { font-size: 18px; flex-shrink: 0; }
+
+.terminal { background: #1F1D1A; border-radius: 14px; padding: 18px 22px 20px; font-family: var(--mono); font-size: 14px; line-height: 1.9; color: #E8E4DD; box-shadow: 0 8px 24px rgba(41,38,31,0.18); }
+.terminal .dots { display: flex; gap: 7px; margin-bottom: 12px; }
+.terminal .dots span { width: 11px; height: 11px; border-radius: 50%; }
+.terminal .dots span:nth-child(1) { background: #FF5F57; }
+.terminal .dots span:nth-child(2) { background: #FEBC2E; }
+.terminal .dots span:nth-child(3) { background: #28C840; }
+.terminal .tp { color: #D97757; font-weight: 700; }
+.terminal .tc { color: #9C948A; }
+.terminal .tg { color: #7BC97E; }
+
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+
+.nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border: 1px solid var(--border-lt); border-radius: 50px; padding: 8px 18px; box-shadow: 0 4px 16px rgba(41,38,31,0.10); z-index: 100; }
+.nav button { background: var(--surface); border: 1px solid var(--border); color: var(--orange-dk); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 15px; transition: all .2s; display: flex; align-items: center; justify-content: center; }
+.nav button:hover { background: var(--orange); color: #fff; border-color: var(--orange); }
+.nav-cnt { font-size: 13px; font-family: var(--mono); color: var(--muted); min-width: 56px; text-align: center; }
+
+.progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--orange), var(--amber)); transition: width .3s ease; z-index: 200; }
+
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  html, body { width: 1920px; height: 1080px; overflow: visible; background: #FFFFFF !important; }
+  .nav, .progress { display: none !important; }
+  .slide { display: none !important; }
+  .slide.active { display: flex !important; width: 1920px !important; height: 1080px !important; padding: 72px 108px 100px !important; position: relative !important; overflow: hidden !important; animation: none !important; }
+}
+
+.big { font-size: 72px; font-weight: 900; color: var(--orange-lt); line-height: 1.2; }
+</style>
+</head>
+<body>
+
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="pill">PROGRAM A ・ 第1回 / 全9回</div>
+      <h1>「導入」から<br><span class="accent">「雇用」</span>へ<br><span style="font-size:34px; font-weight:700;">― エージェントAIとは何か</span></h1>
+      <p style="font-size:18px; color:var(--muted); margin-top:16px; line-height:1.7;">
+        Claude Code を「IT導入」ではなく「AI職員の雇用」として捉え直し、<br>経営者の道具としての全体像をつかむ
+      </p>
+      <div style="margin-top:26px;">
+        <span class="tag">社会福祉法人ふるさと 御中</span>
+        <span class="tag">北島 淳朗 理事長</span>
+        <span class="tag">ポスト・ヒューマン・ジャパン株式会社</span>
+      </div>
+    </div>
+    <div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">❯</span> claude<br>
+        <span class="tc">✻ Welcome to Claude Code!</span><br><br>
+        <span class="tp">&gt;</span> 今日からAI職員として働いてください<br><br>
+        <span class="tg">⏺</span> 承知しました。まずはどの業務からお任せいただけますか？
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 本プログラムの全体像 -->
+<div class="slide bg-2">
+  <div class="section-label">はじめに ― 本プログラムの全体像</div>
+  <h2>二本立て・各全9回で、<span class="accent">法人全体のAI活用基盤</span>を9か月で整える</h2>
+  <div class="g2" style="margin-bottom:18px;">
+    <div class="card o">
+      <div class="label">プログラムA（午前）</div>
+      <h3>🧑‍💼 Claude Code 経営者養成</h3>
+      <p style="margin-top:6px;">理事長自らがエージェントAIを「雇用」し、経営判断を支援。<strong style="color:var(--orange-lt);">この講座がプログラムAです。</strong></p>
+    </div>
+    <div class="card a">
+      <div class="label">プログラムB（午後）</div>
+      <h3>💬 PhAI カスタムチャット作成支援</h3>
+      <p style="margin-top:6px;">各事業所の困りごとを起点に、現場の記録・文書・接遇を支えるカスタムチャットを内製。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    いずれも、貴法人の <span class="accent">NEXT KAIGO（科学的自立支援介護）</span> の推進を加速する「方便（手だて）」として位置づけます
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 今回のねらい -->
+<div class="slide bg-3">
+  <div class="section-label">第1回 ― ねらい</div>
+  <h2>今回、持ち帰っていただく<span class="accent">3つの視点</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw">
+      <div class="kw-num">視点 1</div>
+      <div class="kw-title">💡 「導入」ではなく「雇用」</div>
+      <div class="kw-desc">ITツールを入れるのではなく、優秀な職員を1人雇う。この発想の転換がすべての出発点です。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">視点 2</div>
+      <div class="kw-title">🔍 対話型AIとの違い</div>
+      <div class="kw-desc">Claude Codeは「答えを返す」だけでなく、自ら手順を考え・調べ・作り・確認を返す“自律ループ”で動きます。</div>
+    </div>
+    <div class="kw">
+      <div class="kw-num">視点 3</div>
+      <div class="kw-title">⚖️ 知恵と智慧の切り分け</div>
+      <div class="kw-desc">トークンコスト＝人件費。AIに任せる作業（知恵）と、人にしか担えない判断（智慧）を切り分けます。</div>
+    </div>
+  </div>
+  <div class="hl" style="margin-top:22px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🎯 第1回の到達目標</p>
+    <p style="font-size:16px; font-weight:600;">発想の転換と環境準備 ― 初期設定を済ませ、最初の指示出し（簡単な調べもの・文書下書き）を体験する。</p>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ そもそもClaude Codeとは -->
+<div class="slide bg-1">
+  <div class="section-label">エージェントAIとは ①</div>
+  <h2>AIには<span class="accent">2つのタイプ</span>がある ― 動く「場所」が違う</h2>
+  <div class="vs-wrap">
+    <div class="vs-box">
+      <div class="vs-title">これまでのAI</div>
+      <h3>🌐 ブラウザの中のAI</h3>
+      <p style="margin-bottom:12px;">ChatGPT・Gemini など。チャット画面に質問を入れると答えが返ってくる。</p>
+      <p>文章作成・要約・調べもの——十分すごい。ただし、返ってきた答えを<strong style="color:#B91C1C;">コピーして、整えて、使うのは人</strong>。</p>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">Claude Code</div>
+      <h3>💻 PCの中で動くAI（エージェント）</h3>
+      <p style="margin-bottom:12px;">与えた課題に対して、<strong style="color:var(--text);">自律的に手順を考え、調べ、文書を作り、確認を返す</strong>。</p>
+      <p><strong style="color:var(--orange-lt);">→ コードの知識がなくても、経営の道具として使えます</strong></p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ 対話型AI -->
+<div class="slide bg-2">
+  <div class="section-label">エージェントAIとは ②</div>
+  <h2>対話型AI（チャット）は<span class="accent">「1問1答」</span>で終わる</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item"><span class="who">人間</span>質問する</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>答えを返す</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">—</span>終わり</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:20px;">
+        聞けば答えてくれる<strong style="color:var(--text);">優秀な相談相手</strong>です。<br><br>
+        ただし答えを返したら、そこで止まります。次に進めるには、<strong style="color:var(--text);">人間がまた次の指示を出す</strong>必要があります。
+      </p>
+      <div class="warn">
+        ⚠️ 質問するたびに人が付きっきりになる。「相談はできるが、仕事は任せられない」状態。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ エージェントAI 自律ループ -->
+<div class="slide bg-3">
+  <div class="section-label">エージェントAIとは ③</div>
+  <h2>エージェントAIは<span class="accent">完成まで自分で動く</span>“自律ループ”</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item hot"><span class="who">人間</span>「ゴール」を指示する</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>自分で手順を考える</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>調べ・まとめ・作る</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>確認を求めてくる</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">人間</span>承認して完成</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:20px;">
+        人間の役割は<strong style="color:var(--text);">最初のゴール指示と、最後の承認</strong>の2つだけ。途中は任せられます。
+      </p>
+      <div class="hl">
+        ⚡ 一度指示すれば、完成まで自分で動き続ける。<br>
+        だから「相談相手」ではなく<strong class="accent">「職員」として雇える</strong>のです。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ 従来の発想（IT導入） -->
+<div class="slide bg-1">
+  <div class="section-label">「導入」ではなく「雇用」 ①</div>
+  <h2>従来の「IT導入」は、なぜ<span class="accent">現場の負担</span>になりがちか</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="card r">
+      <div class="label">コスト</div>
+      <h3>IT費用・経費として計上</h3>
+      <p>「使いすぎ」「削減対象」と見られ、コストを削る話になりがち。</p>
+    </div>
+    <div class="card r">
+      <div class="label">導入目的</div>
+      <h3>「生産性向上」「業務効率化」</h3>
+      <p>目的が抽象的なまま導入され、何を任せるかが決まっていない。</p>
+    </div>
+    <div class="card r">
+      <div class="label">責任の所在</div>
+      <h3>システム会社・ベンダー任せ</h3>
+      <p>自分ごとにならず、うまくいかない理由も外に求めてしまう。</p>
+    </div>
+    <div class="card r">
+      <div class="label">現場の反応</div>
+      <h3>「また新しいツールか…」</h3>
+      <p>現場にとっては負担が増えるだけの存在に見えてしまう。</p>
+    </div>
+    <div class="card r">
+      <div class="label">使い方</div>
+      <h3>マニュアルを読んで操作する</h3>
+      <p>覚えることが増え、使いこなせる人が限られてしまう。</p>
+    </div>
+    <div class="card r">
+      <div class="label">成果</div>
+      <h3>数字に出にくい・定着しにくい</h3>
+      <p>効果が見えないまま、いつの間にか使われなくなる。</p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ 新しい発想（雇用） -->
+<div class="slide bg-2">
+  <div class="section-label">「導入」ではなく「雇用」 ②</div>
+  <h2>本プログラムでは<span class="accent">「優秀な職員を1人雇う」</span>と考える</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="card o">
+      <div class="label">コスト</div>
+      <h3>トークン費 = 人件費</h3>
+      <p>経費ではなく「AI職員の給料」として把握する。</p>
+    </div>
+    <div class="card o">
+      <div class="label">導入目的</div>
+      <h3>「この職員に何を任せるか」</h3>
+      <p>採用面接と同じ。任せる仕事を決めてから迎え入れる。</p>
+    </div>
+    <div class="card o">
+      <div class="label">責任の所在</div>
+      <h3>理事長が雇用主</h3>
+      <p>設計も運用も雇用主である理事長自身が担う。</p>
+    </div>
+    <div class="card o">
+      <div class="label">現場の反応</div>
+      <h3>「仕事を手伝ってくれる存在」</h3>
+      <p>ツールではなく同僚。現場の味方として迎えられる。</p>
+    </div>
+    <div class="card o">
+      <div class="label">使い方</div>
+      <h3>指示を出す・任せる・確認する</h3>
+      <p>マニュアル不要。職員に仕事を頼むのと同じ感覚。</p>
+    </div>
+    <div class="card o">
+      <div class="label">成果</div>
+      <h3>明確な成果物・定着しやすい</h3>
+      <p>毎回「できあがった文書・資料」が残るので効果が見える。</p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ トークンコスト=人件費 -->
+<div class="slide bg-3">
+  <div class="section-label">知恵と智慧 ① ― トークンコスト = 人件費</div>
+  <h2>コストの<span class="accent">"見え方"</span>を変えると、判断基準が変わる</h2>
+  <div style="text-align:center; margin-bottom:26px;">
+    <span class="big" style="font-size:44px;">トークン費用</span>
+    <span style="font-size:40px; font-weight:800; color:var(--muted2); margin:0 20px;">=</span>
+    <span class="big" style="font-size:44px;">AI職員の人件費</span>
+  </div>
+  <div class="g2">
+    <div class="card r">
+      <div class="label">IT費・経費として見ると…</div>
+      <h3>😞 現場が使いにくくなる</h3>
+      <p style="margin-top:6px;">「使いすぎ」「削減対象」——コストを削る対象になり、活用が進まない。</p>
+    </div>
+    <div class="card o">
+      <div class="label">人件費として見ると…</div>
+      <h3>💪 費用対効果で判断できる</h3>
+      <p style="margin-top:6px;">「この職員（AI）は何時間働いたか」「成果に見合っているか」で判断できる。</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:20px;">
+    <span class="ci">💡</span>
+    <span>トークンとは、AIが文章を処理する単位。使った分だけ費用がかかります。つまり<strong>「AIが働いた時間」に応じて払う給料</strong>のようなものです。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 知恵（AIに任せる作業） -->
+<div class="slide bg-1">
+  <div class="section-label">知恵と智慧 ② ― 知恵（作業）</div>
+  <h2><span class="accent">AIに任せる仕事</span> = 知恵（作業）</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="kw"><div class="kw-title">🔍 情報収集・調査</div><div class="kw-desc">指定したテーマを調べ、要点をまとめる</div></div>
+    <div class="kw"><div class="kw-title">✍️ 文書の下書き</div><div class="kw-desc">事業計画・補助金申請・通知文などの初稿作成</div></div>
+    <div class="kw"><div class="kw-title">📊 データの整理</div><div class="kw-desc">稼働率・収支・会議資料の構造化・表形式への変換</div></div>
+    <div class="kw"><div class="kw-title">🔁 繰り返し作業</div><div class="kw-desc">同じ形式の書類を大量に処理する</div></div>
+    <div class="kw"><div class="kw-title">📝 議事録の要約</div><div class="kw-desc">会議の録音や記録を整理・要約する</div></div>
+    <div class="kw"><div class="kw-title">📋 規程のチェック</div><div class="kw-desc">法令・内規との整合性を確認する</div></div>
+  </div>
+  <div class="hl center" style="margin-top:22px; font-size:16px; font-weight:600;">
+    共通点：<span class="accent">手順が決まっていて、正解の形がある仕事</span>。時間はかかるが、判断は要らない。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<!-- ⑪ 智慧（人間が担う判断） -->
+<div class="slide bg-2">
+  <div class="section-label">知恵と智慧 ③ ― 智慧（判断）</div>
+  <h2><span class="amber">人間が担う仕事</span> = 智慧（判断）</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);"><div class="kw-title">✅ 最終判断・承認</div><div class="kw-desc">下書きを読み、内容が正しいか確認し承認する</div></div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);"><div class="kw-title">🤲 倫理的判断</div><div class="kw-desc">ご利用者・ご家族への影響を考慮した決断</div></div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);"><div class="kw-title">🤝 関係性の構築</div><div class="kw-desc">職員・地域・行政との信頼関係を育む</div></div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);"><div class="kw-title">👀 現場の空気感</div><div class="kw-desc">数字に表れない違和感や変化に気づく</div></div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);"><div class="kw-title">🌱 理念の体現</div><div class="kw-desc">法人の使命を言葉と行動で示し続ける</div></div>
+    <div class="kw" style="border-color:rgba(227,148,64,0.5);"><div class="kw-title">🛡️ 責任の引き受け</div><div class="kw-desc">全ての意思決定の最終責任を担う</div></div>
+  </div>
+  <div class="hl center" style="margin-top:22px; font-size:16px; font-weight:600;">
+    共通点：<span class="amber">人と向き合い、責任を引き受ける仕事</span>。これはAIには渡せない。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">11</div>
+</div>
+
+<!-- ⑫ 切り分けの結論 -->
+<div class="slide bg-3">
+  <div class="section-label">知恵と智慧 ― まとめ</div>
+  <h2>切り分けの結論は、<span class="accent">この1行</span></h2>
+  <div class="vs-wrap" style="margin-bottom:24px;">
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">AI（Claude Code）</div>
+      <h3>「知恵の外注先」</h3>
+      <p>調べる・書く・整理する。<br>時間のかかる作業を一手に引き受ける。</p>
+    </div>
+    <div class="vs-divider">×</div>
+    <div class="vs-box">
+      <div class="vs-title" style="color:#A16207;">理事長（人間）</div>
+      <h3>「智慧の決定者」</h3>
+      <p>読む・判断する・責任を取る。<br>最終決定は常に人間が行う。</p>
+    </div>
+  </div>
+  <div class="callout">
+    <span class="ci">💡</span>
+    <span>この切り分けができていれば、「AIに仕事を奪われる」心配はありません。AIが作業を巻き取るほど、<strong>人間は判断とご利用者・職員に向き合う時間を取り戻せます</strong>。これが NEXT KAIGO の推進にもつながります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">12</div>
+</div>
+
+<!-- ⑬ 三層戦略 -->
+<div class="slide bg-1">
+  <div class="section-label">経営の三層戦略</div>
+  <h2>現場に<span class="accent">PhAI</span> ／ 連携に<span class="accent">Google</span> ／ 経営に<span class="accent">Claude</span></h2>
+  <div style="margin-top:8px;">
+    <div class="day-row" style="padding:16px 0;">
+      <div class="day-badge" style="min-width:72px; font-size:13px;">経営</div>
+      <div>
+        <h3 style="font-size:19px; margin-bottom:4px;">Claude Code <span style="font-size:13px; color:var(--orange-lt); font-weight:600;">← プログラムA（この講座）</span></h3>
+        <p style="font-size:14px; color:var(--muted);">理事長が直接操作。経営判断の下書き、AI職員の設計・発注、法人全体のAI活用をマネジメントする司令塔。</p>
+      </div>
+    </div>
+    <div class="day-row" style="padding:16px 0;">
+      <div class="day-badge" style="min-width:72px; font-size:13px;">連携</div>
+      <div>
+        <h3 style="font-size:19px; margin-bottom:4px;">Google Workspace</h3>
+        <p style="font-size:14px; color:var(--muted);">カレンダー・ドキュメント・スプレッドシートなど既存ツールと接続。現場と経営をデータでつなぐ橋渡し役。</p>
+      </div>
+    </div>
+    <div class="day-row" style="padding:16px 0;">
+      <div class="day-badge" style="min-width:72px; font-size:13px;">現場</div>
+      <div>
+        <h3 style="font-size:19px; margin-bottom:4px;">PhAI カスタムチャット <span style="font-size:13px; color:var(--amber); font-weight:600;">← プログラムB（午後）</span></h3>
+        <p style="font-size:14px; color:var(--muted);">介護記録・申し送り・ご家族対応など現場業務を直接支援。各事業所のニーズに合わせて内製。</p>
+      </div>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:20px; font-size:16px; font-weight:600;">
+    3層がそれぞれ機能し、Googleでつながることで<span class="accent">法人全体のAI活用基盤</span>が完成する
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">13</div>
+</div>
+
+<!-- ⑭ Claude Codeでできる6つの力 -->
+<div class="slide bg-2">
+  <div class="section-label">Claude Code で経営者ができること</div>
+  <h2>「コードを書く」道具ではない。経営に使う<span class="accent">6つの力</span></h2>
+  <div class="g3" style="gap:14px;">
+    <div class="card o"><div class="icon">🧑‍💼</div><h3>① AI職員を設計する</h3><p>役割・ルール・禁止事項を設定（第2・3回）</p></div>
+    <div class="card o"><div class="icon">📝</div><h3>② 文書を量産する</h3><p>事業計画・補助金・通知文の下書き（第7回）</p></div>
+    <div class="card o"><div class="icon">📊</div><h3>③ データを整理する</h3><p>稼働率・収支などを即座に構造化（第7回）</p></div>
+    <div class="card a"><div class="icon">🛠️</div><h3>④ アプリを作る</h3><p>対話するだけで集計ツールを生成（第5回）</p></div>
+    <div class="card a"><div class="icon">🔗</div><h3>⑤ 外部とつなぐ</h3><p>Google・PhAIと接続（第6回）</p></div>
+    <div class="card a"><div class="icon">🎯</div><h3>⑥ 発注力を磨く</h3><p>本格アプリを専門家へ的確に依頼（第8回）</p></div>
+  </div>
+  <div class="hl center" style="margin-top:20px; font-size:15px;">
+    これらを全9回で順に習得します。今日はその<span class="accent">全体像と発想の転換</span>まで。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">14</div>
+</div>
+
+<!-- ⑮ ハンズオン -->
+<div class="slide bg-3">
+  <div class="section-label">第1回 ― ハンズオン</div>
+  <h2>初期設定と、<span class="accent">最初の指示出し</span>を体験する</h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div>
+      <h3>アカウント・アプリの初期設定</h3>
+      <p>Claude Code（デスクトップアプリ）を起動し、Proプランでログイン。まずは安全に「許可を確認（プランモード）」で進めます。</p>
+    </div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div>
+      <h3>簡単な調べものを頼む</h3>
+      <p>「西海市の高齢者福祉に関する最新の統計を調べて、要点を3つにまとめてください」——自律的に調べ、まとめる様子を確認。</p>
+    </div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div>
+      <h3>文書の下書きを頼む</h3>
+      <p>「ご家族向けの行事案内文を、やわらかい敬語で1枚作ってください」——成果物が「文書ファイル」として残ることを体験。</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:16px;">
+    <span class="ci">🔒</span>
+    <span><strong>安全のお約束：</strong>この段階では<strong>個人情報（ご利用者名・記録の実データ）は入力しません</strong>。安全な使い方は第2回で「就業規則（CLAUDE.md）」として整えます。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">15</div>
+</div>
+
+<!-- ⑯ 到達確認 -->
+<div class="slide bg-1">
+  <div class="section-label">第1回 ― 到達確認</div>
+  <h2>今日の<span class="accent">到達確認チェックリスト</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">
+    以下を自分の言葉で説明できれば、第1回の内容は身についています。
+  </p>
+  <ul class="checklist">
+    <li>「IT導入」と「AI雇用」の違いが言える</li>
+    <li>対話型AIとエージェントAI（自律ループ）の違いが説明できる</li>
+    <li>トークンコスト = 人件費という考え方がわかる</li>
+    <li>知恵（作業）と智慧（判断）を区別できる</li>
+    <li>三層戦略（現場PhAI／連携Google／経営Claude）の全体像を話せる</li>
+    <li>Claude Code で最初の調べもの・文書下書きを体験した</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">16</div>
+</div>
+
+<!-- ⑰ 宿題・次回予告 -->
+<div class="slide bg-2">
+  <div class="section-label">第1回 ― 宿題・次回予告</div>
+  <h2>宿題・成果物と、<span class="accent">次回のご案内</span></h2>
+  <div class="hl" style="margin-bottom:20px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">📝 次回までの宿題・成果物</p>
+    <p style="font-size:18px; font-weight:700;">「AI職員に任せたい経営業務」を3つ書き出してくる</p>
+    <p style="font-size:14px; color:var(--muted); margin-top:6px;">例：月次理事会資料の下書き／補助金申請の下調べ／議事録の要約 など。これが第2回以降の「AI職員」設計の材料になります。</p>
+  </div>
+  <div class="g-50-50">
+    <div class="card o">
+      <div class="label">次回（第2回）のテーマ</div>
+      <h3>環境設定と CLAUDE.md</h3>
+      <p style="margin-top:6px;">AI職員の「就業規則」を書く。法人理念・NEXT KAIGO・専門用語・禁止事項をAIに常時記憶させ、個人情報の扱い方も整えます。</p>
+    </div>
+    <div class="callout">
+      <span class="ci">🗓️</span>
+      <span>本プログラムは<strong>月1回・各回10:00〜12:00</strong>のハンズオン中心。宿題と成果物を積み上げ、9か月で「使える状態」と内製文化を法人に定着させます。</span>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">17</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 17</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key))    go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>
