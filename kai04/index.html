@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラムA 第4回｜AI職員の作り方② ― スキルとコマンドで定型業務を仕組み化</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --orange:#D97757; --orange-lt:#C15F3C; --orange-dk:#A8481F; --amber:#E39440;
+  --bg:#FFFFFF; --bg2:#FAF9F5; --surface:rgba(217,119,87,0.07); --border:rgba(217,119,87,0.32);
+  --border-lt:#E8E4DD; --text:#29261F; --muted:#6E6759; --muted2:#9C948A;
+  --mono:'SF Mono','Menlo','Monaco','Courier New',monospace;
+}
+body { font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic Medium',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; }
+.slide { display:none; width:100vw; height:100vh; padding:52px 72px 72px; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.slide.active { display:flex; animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+.bg-1 { background:radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background:var(--bg2); }
+.bg-3 { background:radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+.slide::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%); opacity:.9; }
+.slide-num { position:absolute; bottom:28px; right:52px; font-size:12px; font-family:var(--mono); color:var(--muted2); letter-spacing:2px; }
+h1 { font-size:54px; font-weight:800; line-height:1.15; letter-spacing:-.02em; }
+h2 { font-size:38px; font-weight:700; line-height:1.2; margin-bottom:32px; letter-spacing:-.01em; }
+h3 { font-size:20px; font-weight:600; line-height:1.4; }
+p { line-height:1.7; }
+.accent { color:var(--orange-lt); } .amber { color:#A16207; } .muted { color:var(--muted); }
+.section-label { display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:2px; font-family:var(--mono); color:var(--orange-lt); margin-bottom:16px; }
+.section-label::before { content:'❯'; color:var(--orange); font-weight:800; }
+.tag { display:inline-block; background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 3px; }
+.card { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:14px; padding:24px 20px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.card.o { border-left:3px solid var(--orange); } .card.a { border-left:3px solid var(--amber); } .card.g { border-left:3px solid #16A34A; } .card.r { border-left:3px solid #DC2626; } .card.w { border-left:3px solid var(--muted2); }
+.card .icon { font-size:28px; margin-bottom:10px; }
+.card .label { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); color:var(--muted2); margin-bottom:6px; }
+.card h3 { font-size:18px; margin-bottom:8px; }
+.card p { font-size:14px; color:var(--muted); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g-50-50 { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.checklist { list-style:none; }
+.checklist li { font-size:17px; color:var(--text); padding:10px 0 10px 28px; border-bottom:1px solid var(--border-lt); position:relative; line-height:1.5; }
+.checklist li::before { content:'✓'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+.step { display:flex; align-items:flex-start; gap:18px; padding:18px 0; border-bottom:1px solid var(--border-lt); }
+.step:last-child { border-bottom:none; }
+.step-num { min-width:40px; height:40px; background:linear-gradient(135deg, var(--orange), var(--amber)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; flex-shrink:0; }
+.step h3 { font-size:19px; margin-bottom:5px; } .step p { font-size:14px; color:var(--muted); }
+.hl { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 22px; font-size:15px; line-height:1.7; color:var(--text); }
+.hl.center { text-align:center; }
+.flow { display:flex; flex-direction:column; align-items:center; gap:0; }
+.flow-item { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:12px; padding:14px 28px; font-size:17px; font-weight:600; text-align:center; min-width:420px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.flow-item.hot { background:var(--surface); border-color:var(--orange); }
+.flow-item .who { font-size:11px; letter-spacing:2px; color:var(--muted2); font-family:var(--mono); display:block; margin-bottom:2px; }
+.flow-item.hot .who { color:var(--orange-lt); }
+.flow-arrow { font-size:18px; color:var(--muted2); padding:6px 0; }
+.vs-wrap { display:grid; grid-template-columns:1fr 48px 1fr; gap:0; align-items:stretch; margin-top:8px; }
+.vs-box { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:16px; padding:28px 24px; text-align:center; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.vs-box.highlight-box { background:var(--surface); border-color:var(--orange); }
+.vs-box .vs-title { font-size:11px; letter-spacing:3px; font-family:var(--mono); color:var(--muted2); margin-bottom:10px; }
+.vs-box h3 { font-size:24px; font-weight:700; margin-bottom:14px; }
+.vs-box p { font-size:14px; color:var(--muted); line-height:1.7; }
+.vs-divider { display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--muted2); }
+.day-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--border-lt); }
+.day-row:last-child { border-bottom:none; }
+.day-badge { min-width:56px; background:var(--surface); border:1px solid var(--border); border-radius:7px; text-align:center; padding:5px 0; font-size:12px; font-weight:700; color:var(--orange-dk); flex-shrink:0; }
+.day-row p { font-size:15px; color:var(--text); }
+.warn { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:12px 18px; font-size:14px; color:#B91C1C; }
+.kw { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:10px; padding:16px 18px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.kw .kw-num { font-size:10px; color:var(--orange-lt); font-weight:700; letter-spacing:1px; font-family:var(--mono); margin-bottom:4px; }
+.kw .kw-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+.kw .kw-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+.footer-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity:.6; }
+.callout { display:flex; align-items:flex-start; gap:12px; background:rgba(227,148,64,0.08); border:1px solid rgba(227,148,64,0.35); border-radius:10px; padding:14px 18px; font-size:14px; color:var(--text); line-height:1.6; }
+.callout .ci { font-size:18px; flex-shrink:0; }
+.terminal { background:#1F1D1A; border-radius:14px; padding:18px 22px 20px; font-family:var(--mono); font-size:13.5px; line-height:1.85; color:#E8E4DD; box-shadow:0 8px 24px rgba(41,38,31,0.18); }
+.terminal .dots { display:flex; gap:7px; margin-bottom:12px; }
+.terminal .dots span { width:11px; height:11px; border-radius:50%; }
+.terminal .dots span:nth-child(1) { background:#FF5F57; } .terminal .dots span:nth-child(2) { background:#FEBC2E; } .terminal .dots span:nth-child(3) { background:#28C840; }
+.terminal .cm { color:#9C948A; } .terminal .kw2 { color:#D97757; font-weight:700; } .terminal .st { color:#7BC97E; } .terminal .tp { color:#D97757; font-weight:700; }
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border:1px solid var(--border-lt); border-radius:50px; padding:8px 18px; box-shadow:0 4px 16px rgba(41,38,31,0.10); z-index:100; }
+.nav button { background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.nav button:hover { background:var(--orange); color:#fff; border-color:var(--orange); }
+.nav-cnt { font-size:13px; font-family:var(--mono); color:var(--muted); min-width:56px; text-align:center; }
+.progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--orange), var(--amber)); transition:width .3s ease; z-index:200; }
+@media print { @page { size:1920px 1080px; margin:0; } *,*::before,*::after { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } html,body { width:1920px; height:1080px; overflow:visible; background:#FFFFFF !important; } .nav,.progress { display:none !important; } .slide { display:none !important; } .slide.active { display:flex !important; width:1920px !important; height:1080px !important; padding:72px 108px 100px !important; position:relative !important; overflow:hidden !important; animation:none !important; } }
+.big { font-size:72px; font-weight:900; color:var(--orange-lt); line-height:1.2; }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="pill">PROGRAM A ・ 第4回 / 全9回</div>
+      <h1>AI職員の作り方 ②<br><span class="accent">スキルとコマンド</span></h1>
+      <p style="font-size:20px; color:var(--muted); margin-top:14px; line-height:1.6;">
+        ― 定型業務を仕組み化する
+      </p>
+      <p style="font-size:16px; color:var(--muted); margin-top:10px; line-height:1.7;">
+        繰り返す仕事を「手順書（スキル）」として登録し、誰が呼んでも同じ品質に揃える
+      </p>
+      <div style="margin-top:24px;">
+        <span class="tag">社会福祉法人ふるさと 御中</span>
+        <span class="tag">Claude Code 経営者養成</span>
+      </div>
+    </div>
+    <div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> /月次理事会資料<br><br>
+        <span class="st">⏺ 前月の稼働率・収支・行事を集計し、</span><br>
+        <span class="st">　理事会資料の下書きを作成しました。</span><br>
+        <span class="st">　→ 理事会資料_2026-07.md</span><br><br>
+        <span class="cm"># コマンド1つで、いつもの資料が出来上がる</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 前回の振り返り -->
+<div class="slide bg-2">
+  <div class="section-label">前回（第3回）の振り返り</div>
+  <h2>専門職員の<span class="accent">チーム</span>ができました</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">おさらい 1</div><div class="kw-title">👥 サブエージェント</div><div class="kw-desc">独立した記憶を持つ専門AIを、用途で使い分けることを学びました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 2</div><div class="kw-title">📐 役割設計の5要素</div><div class="kw-desc">目的・前提・手順・禁止・出力形式。この型で品質を揃えました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 3</div><div class="kw-title">🛡️ 読み取りから試す</div><div class="kw-desc">議事録要約職員・規程チェック職員を安全に運用しました。</div></div>
+  </div>
+  <div class="callout" style="margin-top:22px;">
+    <span class="ci">🔁</span>
+    <span>職員はできた。でも毎回「これをこう要約して」と指示するのは手間。今日はその<strong>繰り返す仕事そのものを「仕組み」にして、ワンタッチで呼び出せる</strong>ようにします。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 今回のねらい -->
+<div class="slide bg-3">
+  <div class="section-label">第4回 ― ねらい</div>
+  <h2>今回、身につけていただく<span class="accent">3つのこと</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">ねらい 1</div><div class="kw-title">📗 スキル＝手順書</div><div class="kw-desc">繰り返す仕事の手順を登録。必要なときだけ呼び出される「再利用できる手順書」。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 2</div><div class="kw-title">⚡ スラッシュコマンド</div><div class="kw-desc">「/コマンド名」でワンタッチ実行。毎回説明せず、決まった流れを一発で。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 3</div><div class="kw-title">🤝 属人化の解消</div><div class="kw-desc">誰が呼んでも同じ品質。引き継ぎコストが下がり、担当が替わっても回る。</div></div>
+  </div>
+  <div class="hl" style="margin-top:22px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🎯 第4回の到達目標</p>
+    <p style="font-size:16px; font-weight:600;">定型業務を標準化し属人化を解消する ― 「月次理事会資料の下書き」スキルを作成し、呼び出して実行する。</p>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ 職員 vs 手順書 -->
+<div class="slide bg-1">
+  <div class="section-label">スキルとは ①</div>
+  <h2>職員（第3回）と手順書（今回）の<span class="accent">違い</span></h2>
+  <div class="vs-wrap">
+    <div class="vs-box">
+      <div class="vs-title">第3回で作ったもの</div>
+      <h3>👤 サブエージェント＝職員</h3>
+      <p style="margin-bottom:12px;">「誰が」やるか。役割を持った専門AI。</p>
+      <p>呼べば対応してくれるが、<strong style="color:var(--text);">毎回「これをこう」と指示</strong>する必要がある。</p>
+    </div>
+    <div class="vs-divider">＋</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">今回作るもの</div>
+      <h3>📗 スキル＝手順書</h3>
+      <p style="margin-bottom:12px;">「どうやって」やるか。決まった作業の流れを登録。</p>
+      <p><strong style="color:var(--orange-lt);">→ 一度書けば、必要なときだけ呼び出されて同じ品質を再現</strong></p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:18px; font-size:15px; font-weight:600;">
+    職員に<span class="accent">「いつもの手順書」を持たせる</span>イメージ。だから毎回説明しなくてよくなります。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ スラッシュコマンド -->
+<div class="slide bg-2">
+  <div class="section-label">スキルとは ② ― ワンタッチ実行</div>
+  <h2>スラッシュコマンドで<span class="accent">「呼ぶだけ」</span>にする</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item"><span class="who">これまで</span>毎回、手順を全部説明する</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">スキル化すると</span>「/月次理事会資料」と打つだけ</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">結果</span>いつもの流れで下書きが完成</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        よく使う作業を<strong style="color:var(--text);">「/（スラッシュ）＋名前」</strong>で呼び出せるようにする。管理でおなじみの <code style="font-family:var(--mono);">/clear</code> と同じ仕組みの「自分用」です。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        「素材を見て」「集計して」「この形式でまとめて」を毎回言わなくていい。<span class="accent">呼ぶだけで動き始めます。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ 属人化の解消 -->
+<div class="slide bg-3">
+  <div class="section-label">スキルの効果 ― 属人化の解消</div>
+  <h2>「あの人しかできない」を<span class="accent">「誰でもできる」</span>に</h2>
+  <div class="g2" style="margin-bottom:18px;">
+    <div class="card r">
+      <div class="label">スキルが無いと</div>
+      <h3>😰 属人化する</h3>
+      <p style="margin-top:6px;">やり方が個人の頭の中。担当が替わると品質が落ち、引き継ぎに時間がかかる。休むと業務が止まる。</p>
+    </div>
+    <div class="card o">
+      <div class="label">スキルにすると</div>
+      <h3>✅ 標準化される</h3>
+      <p style="margin-top:6px;">手順が「見える形」で残る。誰が呼んでも同じ品質。引き継ぎコストが下がり、業務が止まらない。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    スキルは「AIに任せる」だけでなく、<span class="accent">法人の“やり方”を資産として残す</span>仕組みでもあります。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ 例：月次理事会資料スキル -->
+<div class="slide bg-1">
+  <div class="section-label">設計例 ― 月次理事会資料の下書き</div>
+  <h2>スキルの<span class="accent">中身（例）</span></h2>
+  <div class="g-50-50" style="align-items:start;">
+    <div class="terminal">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="cm"># スキル：月次理事会資料の下書き</span><br><br>
+      <span class="kw2">## いつ使うか</span><br>
+      <span class="st">毎月の理事会前、資料を用意するとき</span><br><br>
+      <span class="kw2">## 手順</span><br>
+      <span class="st">1. 前月の稼働率・収支データを読む</span><br>
+      <span class="st">2. 主な行事・出来事を拾う</span><br>
+      <span class="st">3. 決まった章立てで下書きを作る</span><br>
+      <span class="st">4. 数値は要確認マークを付ける</span><br><br>
+      <span class="kw2">## 出力</span><br>
+      <span class="st">理事会資料_年月.md（見出し＋表）</span>
+    </div>
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        一度この手順書を作れば、次からは <code style="font-family:var(--mono);">/月次理事会資料</code> と打つだけ。<strong style="color:var(--text);">下書きまでが数分</strong>で終わります。
+      </p>
+      <div class="callout">
+        <span class="ci">✋</span>
+        <span>あくまで<strong>下書き</strong>。数値の確定・最終判断は理事長・担当者が行います（＝智慧）。AIは知恵の部分を担います。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ スキル化に向く仕事 -->
+<div class="slide bg-2">
+  <div class="section-label">どの仕事をスキルにするか</div>
+  <h2>スキル化に向く仕事の<span class="accent">3条件</span></h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o"><div class="icon">🔁</div><h3>① 毎回似た流れ</h3><p>月次・週次など、繰り返し発生する。やるたびに手順がほぼ同じ。</p></div>
+    <div class="card o"><div class="icon">📝</div><h3>② 手順が言語化できる</h3><p>「まず○○、次に○○」と説明できる。判断が少なく、型がある。</p></div>
+    <div class="card o"><div class="icon">📥</div><h3>③ 入力と出力が決まっている</h3><p>何を渡し、何が返るかが明確。成果物の形が定まっている。</p></div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    3つともYESなら<span class="accent">スキル化の有力候補</span>。逆に判断が多い仕事は、無理にスキルにしなくてOK。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ ハンズオン -->
+<div class="slide bg-3">
+  <div class="section-label">第4回 ― ハンズオン</div>
+  <h2>「月次理事会資料の下書き」<span class="accent">スキルを作る</span></h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div><h3>手順を言語化する</h3><p>理事会資料をいつも「どういう順番で」作っているかを、AIの質問に答えながら書き出します。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div><h3>スキルとして登録する</h3><p>「この手順をスキルにして、/月次理事会資料 で呼べるようにして」と依頼。AIが登録します。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div><h3>呼び出して実行する</h3><p>実際に <code style="font-family:var(--mono);">/月次理事会資料</code> と打ち、下書きが出来上がることを確認。1箇所だけ手直しも体験。</p></div>
+  </div>
+  <div class="callout" style="margin-top:16px;">
+    <span class="ci">✅</span>
+    <span><strong>成果物：</strong>「月次理事会資料の下書き」スキル1件。次回以降、毎月の資料づくりが数分に短縮されます。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 到達確認 -->
+<div class="slide bg-1">
+  <div class="section-label">第4回 ― 到達確認</div>
+  <h2>今日の<span class="accent">到達確認チェックリスト</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">以下を自分の言葉で説明できれば、第4回の内容は身についています。</p>
+  <ul class="checklist">
+    <li>スキル＝再利用できる手順書だと説明できる</li>
+    <li>スラッシュコマンドでワンタッチ実行できる意味がわかる</li>
+    <li>スキル化＝属人化の解消・引き継ぎコスト低減だとわかる</li>
+    <li>スキル化に向く3条件（毎回似た流れ／言語化できる／入出力が決まる）が言える</li>
+    <li>月次理事会資料スキルを作成し、呼び出して実行した</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<!-- ⑪ 宿題・次回予告 -->
+<div class="slide bg-2">
+  <div class="section-label">第4回 ― 宿題・次回予告</div>
+  <h2>宿題・成果物と、<span class="accent">次回のご案内</span></h2>
+  <div class="hl" style="margin-bottom:20px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">📝 次回までの宿題・成果物</p>
+    <p style="font-size:18px; font-weight:700;">法人の定型業務を棚卸しし、スキル化候補を挙げる</p>
+    <p style="font-size:14px; color:var(--muted); margin-top:6px;">例：月次報告／補助金申請の下調べ／広報誌『ふるさとだより』の下書き／通知文の定型。3条件で仕分けてリスト化します。</p>
+  </div>
+  <div class="g-50-50">
+    <div class="card o">
+      <div class="label">次回（第5回）のテーマ</div>
+      <h3>アプリの作り方① ― 経営の道具を自分で組む</h3>
+      <p style="margin-top:6px;">コードが書けなくても、対話を通じて“その場で動く”業務ツール（集計表・チェックリスト）を生成します。</p>
+    </div>
+    <div class="callout">
+      <span class="ci">🛠️</span>
+      <span>第3・4回で「AI職員と手順書」が揃いました。次回からは<strong>「道具（アプリ）」づくり</strong>へ。経営の武器が増えていきます。</span>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">11</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 11</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

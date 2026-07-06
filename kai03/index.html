@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラムA 第3回｜AI職員の作り方① ― 役割（サブエージェント）の設計</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --orange:#D97757; --orange-lt:#C15F3C; --orange-dk:#A8481F; --amber:#E39440;
+  --bg:#FFFFFF; --bg2:#FAF9F5; --surface:rgba(217,119,87,0.07); --border:rgba(217,119,87,0.32);
+  --border-lt:#E8E4DD; --text:#29261F; --muted:#6E6759; --muted2:#9C948A;
+  --mono:'SF Mono','Menlo','Monaco','Courier New',monospace;
+}
+body { font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic Medium',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; }
+.slide { display:none; width:100vw; height:100vh; padding:52px 72px 72px; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.slide.active { display:flex; animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+.bg-1 { background:radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background:var(--bg2); }
+.bg-3 { background:radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+.slide::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%); opacity:.9; }
+.slide-num { position:absolute; bottom:28px; right:52px; font-size:12px; font-family:var(--mono); color:var(--muted2); letter-spacing:2px; }
+h1 { font-size:54px; font-weight:800; line-height:1.15; letter-spacing:-.02em; }
+h2 { font-size:38px; font-weight:700; line-height:1.2; margin-bottom:32px; letter-spacing:-.01em; }
+h3 { font-size:20px; font-weight:600; line-height:1.4; }
+p { line-height:1.7; }
+.accent { color:var(--orange-lt); } .amber { color:#A16207; } .muted { color:var(--muted); }
+.section-label { display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:2px; font-family:var(--mono); color:var(--orange-lt); margin-bottom:16px; }
+.section-label::before { content:'❯'; color:var(--orange); font-weight:800; }
+.tag { display:inline-block; background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 3px; }
+.card { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:14px; padding:24px 20px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.card.o { border-left:3px solid var(--orange); } .card.a { border-left:3px solid var(--amber); } .card.g { border-left:3px solid #16A34A; } .card.r { border-left:3px solid #DC2626; } .card.w { border-left:3px solid var(--muted2); }
+.card .icon { font-size:28px; margin-bottom:10px; }
+.card .label { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); color:var(--muted2); margin-bottom:6px; }
+.card h3 { font-size:18px; margin-bottom:8px; }
+.card p { font-size:14px; color:var(--muted); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g-50-50 { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.checklist { list-style:none; }
+.checklist li { font-size:17px; color:var(--text); padding:10px 0 10px 28px; border-bottom:1px solid var(--border-lt); position:relative; line-height:1.5; }
+.checklist li::before { content:'✓'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+.step { display:flex; align-items:flex-start; gap:18px; padding:18px 0; border-bottom:1px solid var(--border-lt); }
+.step:last-child { border-bottom:none; }
+.step-num { min-width:40px; height:40px; background:linear-gradient(135deg, var(--orange), var(--amber)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; flex-shrink:0; }
+.step h3 { font-size:19px; margin-bottom:5px; } .step p { font-size:14px; color:var(--muted); }
+.hl { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 22px; font-size:15px; line-height:1.7; color:var(--text); }
+.hl.center { text-align:center; }
+.flow { display:flex; flex-direction:column; align-items:center; gap:0; }
+.flow-item { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:12px; padding:14px 28px; font-size:17px; font-weight:600; text-align:center; min-width:420px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.flow-item.hot { background:var(--surface); border-color:var(--orange); }
+.flow-item .who { font-size:11px; letter-spacing:2px; color:var(--muted2); font-family:var(--mono); display:block; margin-bottom:2px; }
+.flow-item.hot .who { color:var(--orange-lt); }
+.flow-arrow { font-size:18px; color:var(--muted2); padding:6px 0; }
+.vs-wrap { display:grid; grid-template-columns:1fr 48px 1fr; gap:0; align-items:stretch; margin-top:8px; }
+.vs-box { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:16px; padding:28px 24px; text-align:center; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.vs-box.highlight-box { background:var(--surface); border-color:var(--orange); }
+.vs-box .vs-title { font-size:11px; letter-spacing:3px; font-family:var(--mono); color:var(--muted2); margin-bottom:10px; }
+.vs-box h3 { font-size:24px; font-weight:700; margin-bottom:14px; }
+.vs-box p { font-size:14px; color:var(--muted); line-height:1.7; }
+.vs-divider { display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--muted2); }
+.day-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--border-lt); }
+.day-row:last-child { border-bottom:none; }
+.day-badge { min-width:56px; background:var(--surface); border:1px solid var(--border); border-radius:7px; text-align:center; padding:5px 0; font-size:12px; font-weight:700; color:var(--orange-dk); flex-shrink:0; }
+.day-row p { font-size:15px; color:var(--text); }
+.warn { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:12px 18px; font-size:14px; color:#B91C1C; }
+.kw { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:10px; padding:16px 18px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.kw .kw-num { font-size:10px; color:var(--orange-lt); font-weight:700; letter-spacing:1px; font-family:var(--mono); margin-bottom:4px; }
+.kw .kw-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+.kw .kw-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+.footer-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity:.6; }
+.callout { display:flex; align-items:flex-start; gap:12px; background:rgba(227,148,64,0.08); border:1px solid rgba(227,148,64,0.35); border-radius:10px; padding:14px 18px; font-size:14px; color:var(--text); line-height:1.6; }
+.callout .ci { font-size:18px; flex-shrink:0; }
+.terminal { background:#1F1D1A; border-radius:14px; padding:18px 22px 20px; font-family:var(--mono); font-size:13.5px; line-height:1.85; color:#E8E4DD; box-shadow:0 8px 24px rgba(41,38,31,0.18); }
+.terminal .dots { display:flex; gap:7px; margin-bottom:12px; }
+.terminal .dots span { width:11px; height:11px; border-radius:50%; }
+.terminal .dots span:nth-child(1) { background:#FF5F57; } .terminal .dots span:nth-child(2) { background:#FEBC2E; } .terminal .dots span:nth-child(3) { background:#28C840; }
+.terminal .cm { color:#9C948A; } .terminal .kw2 { color:#D97757; font-weight:700; } .terminal .st { color:#7BC97E; }
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border:1px solid var(--border-lt); border-radius:50px; padding:8px 18px; box-shadow:0 4px 16px rgba(41,38,31,0.10); z-index:100; }
+.nav button { background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.nav button:hover { background:var(--orange); color:#fff; border-color:var(--orange); }
+.nav-cnt { font-size:13px; font-family:var(--mono); color:var(--muted); min-width:56px; text-align:center; }
+.progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--orange), var(--amber)); transition:width .3s ease; z-index:200; }
+@media print { @page { size:1920px 1080px; margin:0; } *,*::before,*::after { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } html,body { width:1920px; height:1080px; overflow:visible; background:#FFFFFF !important; } .nav,.progress { display:none !important; } .slide { display:none !important; } .slide.active { display:flex !important; width:1920px !important; height:1080px !important; padding:72px 108px 100px !important; position:relative !important; overflow:hidden !important; animation:none !important; } }
+.big { font-size:72px; font-weight:900; color:var(--orange-lt); line-height:1.2; }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="pill">PROGRAM A ・ 第3回 / 全9回</div>
+      <h1>AI職員の作り方 ①<br><span class="accent">役割の設計</span></h1>
+      <p style="font-size:20px; color:var(--muted); margin-top:14px; line-height:1.6;">
+        ― サブエージェント（専門職員）を設計する
+      </p>
+      <p style="font-size:16px; color:var(--muted); margin-top:10px; line-height:1.7;">
+        特定業務に特化した「専門職員」を複数つくり、用途で使い分ける
+      </p>
+      <div style="margin-top:24px;">
+        <span class="tag">社会福祉法人ふるさと 御中</span>
+        <span class="tag">Claude Code 経営者養成</span>
+      </div>
+    </div>
+    <div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="cm"># 議事録要約職員</span><br>
+        <span class="kw2">目的:</span> <span class="st">会議記録を要点3点に整理</span><br>
+        <span class="kw2">手順:</span> <span class="st">1.決定事項 2.宿題 3.次回</span><br>
+        <span class="kw2">禁止:</span> <span class="st">個人名は記号化</span><br><br>
+        <span class="cm"># 規程チェック職員</span><br>
+        <span class="kw2">目的:</span> <span class="st">文書と内規の整合を確認</span><br>
+        <span class="kw2">出力:</span> <span class="st">相違点を表で提示</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 前回の振り返り -->
+<div class="slide bg-2">
+  <div class="section-label">前回（第2回）の振り返り</div>
+  <h2>就業規則（CLAUDE.md）で<span class="accent">土台</span>ができました</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">おさらい 1</div><div class="kw-title">📁 職場を用意</div><div class="kw-desc">プロジェクト（作業フォルダ）＝AI職員が働く職場を決めました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 2</div><div class="kw-title">📘 就業規則を記述</div><div class="kw-desc">ふるさと版CLAUDE.mdに理念・用語・禁止事項を記憶させました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 3</div><div class="kw-title">🔒 安全の土台</div><div class="kw-desc">個人情報を入れない・シャドーAI禁止を規則に明記しました。</div></div>
+  </div>
+  <div class="callout" style="margin-top:22px;">
+    <span class="ci">👥</span>
+    <span>ここまでは「1人の職員に規則を渡した」段階。今日はいよいよ、<strong>特定業務に特化した「専門職員」を複数つくる</strong>——組織づくりに入ります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 今回のねらい -->
+<div class="slide bg-3">
+  <div class="section-label">第3回 ― ねらい</div>
+  <h2>今回、身につけていただく<span class="accent">3つのこと</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">ねらい 1</div><div class="kw-title">👤 専門職員という考え方</div><div class="kw-desc">サブエージェント＝独立した記憶を持つ専門AI。1人の万能職員より、専門特化のチームが強い。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 2</div><div class="kw-title">📐 役割設計の「型」</div><div class="kw-desc">目的・前提・手順・禁止事項・出力形式。この5要素で、誰が呼んでも同じ品質に。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 3</div><div class="kw-title">🛡️ 安全運用の基本</div><div class="kw-desc">まずは読み取り中心で試し、確認を挟む。いきなり書き換え・削除はさせない。</div></div>
+  </div>
+  <div class="hl" style="margin-top:22px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🎯 第3回の到達目標</p>
+    <p style="font-size:16px; font-weight:600;">専門特化のAI職員をつくる ― 「議事録要約職員」「規程チェック職員」など、用途で使い分ける2体を完成させる。</p>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ 万能 vs 専門 -->
+<div class="slide bg-1">
+  <div class="section-label">サブエージェントとは ①</div>
+  <h2>1人の万能職員より、<span class="accent">専門職員のチーム</span></h2>
+  <div class="vs-wrap">
+    <div class="vs-box">
+      <div class="vs-title">1人に全部やらせる</div>
+      <h3>😵 万能職員（1体）</h3>
+      <p style="margin-bottom:12px;">議事録も規程チェックも通知文も、1つのやり取りで全部。</p>
+      <p>記憶（コンテキスト）が混ざり、<strong style="color:#B91C1C;">「さっきの規程の話が議事録に混入」</strong>のような取り違えが起きやすい。</p>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">用途で使い分ける</div>
+      <h3>👥 専門職員（複数体）</h3>
+      <p style="margin-bottom:12px;">議事録は議事録職員、規程チェックは規程職員。<strong style="color:var(--text);">それぞれ独立した記憶</strong>を持つ。</p>
+      <p><strong style="color:var(--orange-lt);">→ 混ざらない・精度が上がる・使い分けが明快</strong></p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:18px; font-size:15px; font-weight:600;">
+    サブエージェント＝<span class="accent">独立した記憶（コンテキスト）を持つ専門AI</span>。人でいう「配属の違う職員」です。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ 役割設計の型 -->
+<div class="slide bg-2">
+  <div class="section-label">サブエージェントとは ② ― 役割設計の型</div>
+  <h2>専門職員は、この<span class="accent">5要素</span>で設計する</h2>
+  <div class="g3" style="gap:14px;">
+    <div class="card o"><div class="label">1</div><h3>🎯 目的</h3><p>この職員は何のために働くか。一文で。</p></div>
+    <div class="card o"><div class="label">2</div><h3>📋 前提</h3><p>知っておくべき法人の状況・用語・ルール。</p></div>
+    <div class="card o"><div class="label">3</div><h3>🪜 手順</h3><p>どういう順番で作業を進めるか。</p></div>
+    <div class="card a"><div class="label">4</div><h3>🚫 禁止事項</h3><p>やってはいけないこと（個人名・削除など）。</p></div>
+    <div class="card a"><div class="label">5</div><h3>📤 出力形式</h3><p>どんな形で納品するか（箇条書き・表など）。</p></div>
+    <div class="card w" style="display:flex; align-items:center; justify-content:center;"><p style="font-size:15px; color:var(--text); text-align:center;">この型に沿えば、<strong style="color:var(--orange-lt);">誰が呼んでも同じ品質</strong>に揃います。</p></div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ 例：議事録要約職員 -->
+<div class="slide bg-3">
+  <div class="section-label">設計例 ①</div>
+  <h2><span class="accent">議事録要約職員</span>を設計してみる</h2>
+  <div class="g-50-50" style="align-items:start;">
+    <div class="terminal">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="cm"># 議事録要約職員</span><br><br>
+      <span class="kw2">## 目的</span><br>
+      <span class="st">会議記録を、要点だけに整理する</span><br><br>
+      <span class="kw2">## 前提</span><br>
+      <span class="st">当法人の会議は理事会・ユニット会議など</span><br><br>
+      <span class="kw2">## 手順</span><br>
+      <span class="st">1. 決定事項を箇条書き</span><br>
+      <span class="st">2. 宿題（担当・期限）を表に</span><br>
+      <span class="st">3. 次回の論点をまとめる</span><br><br>
+      <span class="kw2">## 禁止</span><br>
+      <span class="st">個人名は「A様」等に置き換える</span><br><br>
+      <span class="kw2">## 出力形式</span><br>
+      <span class="st">見出し＋箇条書き＋表</span>
+    </div>
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        左のように<strong style="color:var(--text);">5要素を埋めるだけ</strong>。あとは会議メモを渡せば、毎回この型で要約が返ってきます。
+      </p>
+      <div class="callout">
+        <span class="ci">💡</span>
+        <span>ゼロから書かず、<strong>「議事録要約の専門職員を作りたい。5要素を質問して」</strong>と伝えれば、AIが順に質問してたたき台を作ります。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ 例：規程チェック職員 -->
+<div class="slide bg-1">
+  <div class="section-label">設計例 ②</div>
+  <h2>もう1体、<span class="accent">規程チェック職員</span></h2>
+  <div class="g-50-50">
+    <div>
+      <div class="kw" style="margin-bottom:12px;"><div class="kw-num">目的</div><div class="kw-title">📋 文書と内規の整合を確認</div><div class="kw-desc">通知文・マニュアルが、法人の規程や法令とズレていないかを点検する。</div></div>
+      <div class="kw" style="margin-bottom:12px;"><div class="kw-num">手順</div><div class="kw-title">🪜 突き合わせて相違点を出す</div><div class="kw-desc">対象文書を読み、内規と照合し、相違点・要確認箇所を洗い出す。</div></div>
+      <div class="kw"><div class="kw-num">出力形式</div><div class="kw-title">📤 相違点を表で提示</div><div class="kw-desc">「箇所／現状／規程／対応案」の表で、人が判断しやすい形に。</div></div>
+    </div>
+    <div>
+      <div class="warn" style="margin-bottom:16px;">
+        ⚠️ <strong>チェック職員は「指摘」まで。修正・確定は人が判断します。</strong>AIの指摘は下書き。最終判断は理事長・担当者が担う（＝智慧）。
+      </div>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        こうして役割の違う職員を並べていくと、法人の中に<span class="accent">「AI職員のチーム」</span>ができていきます。
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ 安全運用 -->
+<div class="slide bg-2">
+  <div class="section-label">安全運用の基本</div>
+  <h2>新人と同じ。<span class="accent">まずは読み取り中心で試す</span></h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o"><div class="icon">👀</div><h3>読み取りから始める</h3><p>いきなり書き換え・削除はさせない。まず「読んで・まとめる」仕事で信頼を確かめる。</p></div>
+    <div class="card a"><div class="icon">✋</div><h3>確認を挟む</h3><p>プランモードで「こう進めます」を見てから承認。大事な操作の前に必ず一拍。</p></div>
+    <div class="card g"><div class="icon">📈</div><h3>徐々に任せる</h3><p>安定してきたら任せる範囲を広げる。人の新人育成とまったく同じ考え方。</p></div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    禁止事項は<span class="accent">CLAUDE.md（第2回）＋各職員の設計</span>の二重で守る。だから安心して増やせます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ ハンズオン -->
+<div class="slide bg-3">
+  <div class="section-label">第3回 ― ハンズオン</div>
+  <h2>AI職員を<span class="accent">2体、一緒に作る</span></h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div><h3>議事録要約職員をつくる</h3><p>5要素（目的・前提・手順・禁止・出力形式）をAIの質問に答えて設計。仮の会議メモで動作確認。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div><h3>規程チェック職員をつくる</h3><p>同じ型で、文書と内規を突き合わせる職員を設計。相違点が表で返ることを確認。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div><h3>使い分けを体験する</h3><p>用途に応じて2体を呼び分け、記憶が混ざらないことを確認。安全のため読み取り中心で。</p></div>
+  </div>
+  <div class="callout" style="margin-top:16px;">
+    <span class="ci">✅</span>
+    <span><strong>成果物：</strong>専門職員2体（議事録要約職員・規程チェック職員）。法人初の「AI職員チーム」の第一歩です。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 到達確認 -->
+<div class="slide bg-1">
+  <div class="section-label">第3回 ― 到達確認</div>
+  <h2>今日の<span class="accent">到達確認チェックリスト</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">以下を自分の言葉で説明できれば、第3回の内容は身についています。</p>
+  <ul class="checklist">
+    <li>サブエージェント＝独立した記憶を持つ専門AIだとわかる</li>
+    <li>万能1体より専門特化のチームが良い理由が言える</li>
+    <li>役割設計の5要素（目的・前提・手順・禁止・出力形式）が言える</li>
+    <li>まず読み取り中心で試し、確認を挟む安全運用がわかる</li>
+    <li>専門職員を2体つくり、使い分けを体験した</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<!-- ⑪ 宿題・次回予告 -->
+<div class="slide bg-2">
+  <div class="section-label">第3回 ― 宿題・次回予告</div>
+  <h2>宿題・成果物と、<span class="accent">次回のご案内</span></h2>
+  <div class="hl" style="margin-bottom:20px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">📝 次回までの宿題・成果物</p>
+    <p style="font-size:18px; font-weight:700;">自分の業務から「専門職員の候補」を5つ抽出してくる</p>
+    <p style="font-size:14px; color:var(--muted); margin-top:6px;">例：補助金調査職員／通知文ドラフト職員／稼働率分析職員／広報下書き職員 など。次回、これを「仕組み」に変えます。</p>
+  </div>
+  <div class="g-50-50">
+    <div class="card o">
+      <div class="label">次回（第4回）のテーマ</div>
+      <h3>AI職員の作り方② ― スキルとコマンド</h3>
+      <p style="margin-top:6px;">繰り返す仕事を「手順書（スキル）」として登録し、スラッシュコマンドでワンタッチ実行。属人化を解消します。</p>
+    </div>
+    <div class="callout">
+      <span class="ci">🏗️</span>
+      <span>第3回で「専門職員」を、第4回で「定型業務の仕組み化」を。<strong>AI職員が組織として育っていきます。</strong></span>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">11</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 11</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

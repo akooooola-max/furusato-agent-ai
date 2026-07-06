@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラムA 第7回｜経営課題をエージェントに渡す ― 意思決定支援としての活用</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --orange:#D97757; --orange-lt:#C15F3C; --orange-dk:#A8481F; --amber:#E39440;
+  --bg:#FFFFFF; --bg2:#FAF9F5; --surface:rgba(217,119,87,0.07); --border:rgba(217,119,87,0.32);
+  --border-lt:#E8E4DD; --text:#29261F; --muted:#6E6759; --muted2:#9C948A;
+  --mono:'SF Mono','Menlo','Monaco','Courier New',monospace;
+}
+body { font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic Medium',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; }
+.slide { display:none; width:100vw; height:100vh; padding:52px 72px 72px; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.slide.active { display:flex; animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+.bg-1 { background:radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background:var(--bg2); }
+.bg-3 { background:radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+.slide::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%); opacity:.9; }
+.slide-num { position:absolute; bottom:28px; right:52px; font-size:12px; font-family:var(--mono); color:var(--muted2); letter-spacing:2px; }
+h1 { font-size:52px; font-weight:800; line-height:1.15; letter-spacing:-.02em; }
+h2 { font-size:38px; font-weight:700; line-height:1.2; margin-bottom:32px; letter-spacing:-.01em; }
+h3 { font-size:20px; font-weight:600; line-height:1.4; }
+p { line-height:1.7; }
+.accent { color:var(--orange-lt); } .amber { color:#A16207; } .muted { color:var(--muted); }
+.section-label { display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:2px; font-family:var(--mono); color:var(--orange-lt); margin-bottom:16px; }
+.section-label::before { content:'❯'; color:var(--orange); font-weight:800; }
+.tag { display:inline-block; background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 3px; }
+.card { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:14px; padding:24px 20px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.card.o { border-left:3px solid var(--orange); } .card.a { border-left:3px solid var(--amber); } .card.g { border-left:3px solid #16A34A; } .card.r { border-left:3px solid #DC2626; } .card.w { border-left:3px solid var(--muted2); }
+.card .icon { font-size:28px; margin-bottom:10px; }
+.card .label { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); color:var(--muted2); margin-bottom:6px; }
+.card h3 { font-size:18px; margin-bottom:8px; }
+.card p { font-size:14px; color:var(--muted); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g-50-50 { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.checklist { list-style:none; }
+.checklist li { font-size:17px; color:var(--text); padding:10px 0 10px 28px; border-bottom:1px solid var(--border-lt); position:relative; line-height:1.5; }
+.checklist li::before { content:'✓'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+.step { display:flex; align-items:flex-start; gap:18px; padding:18px 0; border-bottom:1px solid var(--border-lt); }
+.step:last-child { border-bottom:none; }
+.step-num { min-width:40px; height:40px; background:linear-gradient(135deg, var(--orange), var(--amber)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; flex-shrink:0; }
+.step h3 { font-size:19px; margin-bottom:5px; } .step p { font-size:14px; color:var(--muted); }
+.hl { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 22px; font-size:15px; line-height:1.7; color:var(--text); }
+.hl.center { text-align:center; }
+.flow { display:flex; flex-direction:column; align-items:center; gap:0; }
+.flow-item { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:12px; padding:14px 28px; font-size:17px; font-weight:600; text-align:center; min-width:420px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.flow-item.hot { background:var(--surface); border-color:var(--orange); }
+.flow-item .who { font-size:11px; letter-spacing:2px; color:var(--muted2); font-family:var(--mono); display:block; margin-bottom:2px; }
+.flow-item.hot .who { color:var(--orange-lt); }
+.flow-arrow { font-size:18px; color:var(--muted2); padding:6px 0; }
+.vs-wrap { display:grid; grid-template-columns:1fr 48px 1fr; gap:0; align-items:stretch; margin-top:8px; }
+.vs-box { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:16px; padding:28px 24px; text-align:center; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.vs-box.highlight-box { background:var(--surface); border-color:var(--orange); }
+.vs-box .vs-title { font-size:11px; letter-spacing:3px; font-family:var(--mono); color:var(--muted2); margin-bottom:10px; }
+.vs-box h3 { font-size:24px; font-weight:700; margin-bottom:14px; }
+.vs-box p { font-size:14px; color:var(--muted); line-height:1.7; }
+.vs-divider { display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--muted2); }
+.day-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--border-lt); }
+.day-row:last-child { border-bottom:none; }
+.day-badge { min-width:56px; background:var(--surface); border:1px solid var(--border); border-radius:7px; text-align:center; padding:5px 0; font-size:12px; font-weight:700; color:var(--orange-dk); flex-shrink:0; }
+.day-row p { font-size:15px; color:var(--text); }
+.warn { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:12px 18px; font-size:14px; color:#B91C1C; }
+.kw { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:10px; padding:16px 18px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.kw .kw-num { font-size:10px; color:var(--orange-lt); font-weight:700; letter-spacing:1px; font-family:var(--mono); margin-bottom:4px; }
+.kw .kw-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+.kw .kw-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+.footer-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity:.6; }
+.callout { display:flex; align-items:flex-start; gap:12px; background:rgba(227,148,64,0.08); border:1px solid rgba(227,148,64,0.35); border-radius:10px; padding:14px 18px; font-size:14px; color:var(--text); line-height:1.6; }
+.callout .ci { font-size:18px; flex-shrink:0; }
+.terminal { background:#1F1D1A; border-radius:14px; padding:18px 22px 20px; font-family:var(--mono); font-size:13.5px; line-height:1.85; color:#E8E4DD; box-shadow:0 8px 24px rgba(41,38,31,0.18); }
+.terminal .dots { display:flex; gap:7px; margin-bottom:12px; }
+.terminal .dots span { width:11px; height:11px; border-radius:50%; }
+.terminal .dots span:nth-child(1) { background:#FF5F57; } .terminal .dots span:nth-child(2) { background:#FEBC2E; } .terminal .dots span:nth-child(3) { background:#28C840; }
+.terminal .cm { color:#9C948A; } .terminal .kw2 { color:#D97757; font-weight:700; } .terminal .st { color:#7BC97E; } .terminal .tp { color:#D97757; font-weight:700; }
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border:1px solid var(--border-lt); border-radius:50px; padding:8px 18px; box-shadow:0 4px 16px rgba(41,38,31,0.10); z-index:100; }
+.nav button { background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.nav button:hover { background:var(--orange); color:#fff; border-color:var(--orange); }
+.nav-cnt { font-size:13px; font-family:var(--mono); color:var(--muted); min-width:56px; text-align:center; }
+.progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--orange), var(--amber)); transition:width .3s ease; z-index:200; }
+@media print { @page { size:1920px 1080px; margin:0; } *,*::before,*::after { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } html,body { width:1920px; height:1080px; overflow:visible; background:#FFFFFF !important; } .nav,.progress { display:none !important; } .slide { display:none !important; } .slide.active { display:flex !important; width:1920px !important; height:1080px !important; padding:72px 108px 100px !important; position:relative !important; overflow:hidden !important; animation:none !important; } }
+.big { font-size:72px; font-weight:900; color:var(--orange-lt); line-height:1.2; }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="pill">PROGRAM A ・ 第7回 / 全9回</div>
+      <h1>経営課題を<br><span class="accent">エージェントに渡す</span></h1>
+      <p style="font-size:20px; color:var(--muted); margin-top:14px; line-height:1.6;">
+        ― 意思決定支援としての活用
+      </p>
+      <p style="font-size:16px; color:var(--muted); margin-top:10px; line-height:1.7;">
+        経営判断の“下書き”をAI職員に任せ、理事長は判断に専念する
+      </p>
+      <div style="margin-top:24px;">
+        <span class="tag">社会福祉法人ふるさと 御中</span>
+        <span class="tag">Claude Code 経営者養成</span>
+      </div>
+    </div>
+    <div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tp">&gt;</span> 特養の稼働率が下がっている。<br>
+        <span class="tp">　</span>原因の切り口を整理して。<br><br>
+        <span class="st">⏺ 考えられる切り口を4つに整理しました：</span><br>
+        <span class="st">　1. 入退所の動き　2. 待機者の状況</span><br>
+        <span class="st">　3. 職員配置　4. 近隣競合</span><br>
+        <span class="st">　各項目の確認データも提案します。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 前回の振り返り -->
+<div class="slide bg-2">
+  <div class="section-label">前回（第6回）の振り返り</div>
+  <h2>道具が<span class="accent">既存ツールとつながり</span>ました</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">おさらい 1</div><div class="kw-title">🔌 MCP＝配線</div><div class="kw-desc">外部ツール・データへ接続する仕組みを学びました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 2</div><div class="kw-title">🔗 連携にGoogle</div><div class="kw-desc">経営と現場をGoogleがつなぐ、三層戦略を確認しました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 3</div><div class="kw-title">🛡️ 承認を挟む</div><div class="kw-desc">読み取りから始め、書き込み・送信は必ず確認しました。</div></div>
+  </div>
+  <div class="callout" style="margin-top:22px;">
+    <span class="ci">🎯</span>
+    <span>第1〜6回で「職員・手順書・道具・連携」が揃いました。今日はいよいよ、それらを使って<strong>実際の経営判断そのものをAI職員に手伝わせます</strong>——本プログラムの核心回です。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 今回のねらい -->
+<div class="slide bg-3">
+  <div class="section-label">第7回 ― ねらい</div>
+  <h2>今回、身につけていただく<span class="accent">3つのこと</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">ねらい 1</div><div class="kw-title">🔍 論点整理を任せる</div><div class="kw-desc">稼働率・収支・人員配置などの「切り口出し」をAIに。考える材料を素早く揃える。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 2</div><div class="kw-title">📝 下書きを量産する</div><div class="kw-desc">事業計画・補助金・通知文書の初稿をAIに。理事長は「ゼロから」から解放される。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 3</div><div class="kw-title">⚖️ 最終的な切り分け</div><div class="kw-desc">智慧（人の判断）と知恵（AIの作業）の線を、実務の中で最終確認する。</div></div>
+  </div>
+  <div class="hl" style="margin-top:22px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🎯 第7回の到達目標</p>
+    <p style="font-size:16px; font-weight:600;">意思決定支援として活用する ― 実際の経営テーマを1つ選び、調べる→整理する→文書化するまで通しで実演する。</p>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ 論点整理 -->
+<div class="slide bg-1">
+  <div class="section-label">意思決定支援 ① ― 論点整理</div>
+  <h2>まず<span class="accent">「切り口」</span>を出させる ― 考える材料を素早く</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        経営判断でいちばん時間がかかるのは、<strong style="color:var(--text);">「何を、どの角度から見るか」</strong>を洗い出すところ。ここをAIに任せると、理事長は<strong style="color:var(--text);">最初から「考える」に集中</strong>できます。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        AIが出すのは<span class="accent">「論点の候補」</span>。採否と重みづけは理事長が決める。ここが智慧の出番です。
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 切り口出しの例</p>
+      <div class="day-row"><div class="day-badge" style="min-width:80px;">稼働率</div><p style="font-size:14px;">入退所・待機者・季節変動・競合</p></div>
+      <div class="day-row"><div class="day-badge" style="min-width:80px;">収支</div><p style="font-size:14px;">加算取得・人件費率・光熱費・修繕</p></div>
+      <div class="day-row" style="border-bottom:none;"><div class="day-badge" style="min-width:80px;">人員配置</div><p style="font-size:14px;">ユニット別・時間帯・資格・定着</p></div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ 下書き生成 -->
+<div class="slide bg-2">
+  <div class="section-label">意思決定支援 ② ― 下書き生成</div>
+  <h2>時間のかかる文書は、<span class="accent">初稿をAIに</span></h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o"><div class="icon">📋</div><h3>事業計画</h3><p>方針・数値目標・行動計画の骨子を下書き。理事長は中身を練ることに集中。</p></div>
+    <div class="card o"><div class="icon">💴</div><h3>補助金・申請</h3><p>人材開発支援助成金などの申請文書の下調べ・初稿。要件との突き合わせも。</p></div>
+    <div class="card o"><div class="icon">📨</div><h3>通知・案内文</h3><p>ご家族向け・職員向けの通知文を、法人のトーンで下書き。</p></div>
+  </div>
+  <div class="warn">
+    ✋ <strong>あくまで下書き（＝知恵）。</strong>数値の確定・方針の決定・対外的な最終判断は、必ず理事長が行います（＝智慧）。AIは初稿までを高速で担います。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ 智慧と知恵の切り分け -->
+<div class="slide bg-3">
+  <div class="section-label">意思決定支援 ③ ― 最終的な切り分け</div>
+  <h2>下書きは<span class="accent">AI</span>、決めるのは<span class="amber">理事長</span></h2>
+  <div class="vs-wrap" style="margin-bottom:18px;">
+    <div class="vs-box highlight-box">
+      <div class="vs-title" style="color:var(--orange-lt);">知恵（AIに任せる）</div>
+      <h3>🤖 調べる・整理する・書く</h3>
+      <p>切り口出し・データ集約・下書き作成。時間のかかる準備を一手に。</p>
+    </div>
+    <div class="vs-divider">→</div>
+    <div class="vs-box">
+      <div class="vs-title" style="color:#A16207;">智慧（人が担う）</div>
+      <h3>🧠 読む・判断する・決める</h3>
+      <p>どの論点を採るか、どう決めるか、誰にどう伝えるか。責任を持って決定する。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    第1回で学んだ切り分けが、<span class="accent">実際の経営判断で機能する</span>のを体験する回です。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ 通しの流れ -->
+<div class="slide bg-1">
+  <div class="section-label">通しの流れ</div>
+  <h2>1つのテーマを<span class="accent">「調べる→整理→文書化」</span>で通す</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item hot"><span class="who">理事長</span>経営テーマを1つ渡す</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>調べる（連携データも参照）</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>論点を整理する</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">AI</span>文書化する（下書き）</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">理事長</span>確認・判断・決定</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        これまで学んだ<strong style="color:var(--text);">職員・手順書・道具・連携</strong>が、この1本の流れに全部乗ります。バラバラだった要素が、経営の実務でひとつにつながる瞬間です。
+      </p>
+      <div class="callout">
+        <span class="ci">🎯</span>
+        <span>理事長がやるのは<strong>最初のテーマ提示と、最後の判断</strong>だけ。間の「調べる・整理・文書化」はAI職員が担います。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ ハンズオン -->
+<div class="slide bg-2">
+  <div class="section-label">第7回 ― ハンズオン</div>
+  <h2>実際の経営テーマを<span class="accent">1つ、通しで動かす</span></h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div><h3>テーマを1つ選ぶ</h3><p>「特養の稼働率」「次年度の重点施策」など、いま考えたい経営テーマを1つ選びます。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div><h3>調べる→整理する</h3><p>AIに切り口を出させ、必要なら連携データを参照。論点を整理してもらいます。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div><h3>文書化まで通す</h3><p>整理をもとに、報告・提案の下書きまで作成。理事長が確認・修正して仕上げます。</p></div>
+  </div>
+  <div class="callout" style="margin-top:16px;">
+    <span class="ci">✅</span>
+    <span><strong>成果物：</strong>経営テーマの実演1件（調べる→整理→文書化の下書き）。「経営判断の準備をAIに任せる」感覚を持ち帰ります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ 到達確認 -->
+<div class="slide bg-3">
+  <div class="section-label">第7回 ― 到達確認</div>
+  <h2>今日の<span class="accent">到達確認チェックリスト</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">以下を自分の言葉で説明できれば、第7回の内容は身についています。</p>
+  <ul class="checklist">
+    <li>論点整理（切り口出し）をAIに任せる意味がわかる</li>
+    <li>事業計画・補助金・通知文の下書きをAIに任せられると言える</li>
+    <li>下書き＝知恵、決定＝智慧、の最終的な切り分けが説明できる</li>
+    <li>「調べる→整理→文書化」の通しの流れがわかる</li>
+    <li>実際の経営テーマを1つ、通しで動かした</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 宿題・次回予告 -->
+<div class="slide bg-1">
+  <div class="section-label">第7回 ― 宿題・次回予告</div>
+  <h2>宿題・成果物と、<span class="accent">次回のご案内</span></h2>
+  <div class="hl" style="margin-bottom:20px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">📝 次回までの宿題・成果物</p>
+    <p style="font-size:18px; font-weight:700;">次回、代行で本格化したいテーマを1件決めてくる</p>
+    <p style="font-size:14px; color:var(--muted); margin-top:6px;">自作の試作で手応えを得たもの、あるいは本格的なアプリが必要なもの。第8回で「専門家への発注」に落とし込みます。</p>
+  </div>
+  <div class="g-50-50">
+    <div class="card o">
+      <div class="label">次回（第8回）のテーマ</div>
+      <h3>作成代行の活用とニーズ整理 ― 一松浩太との協働</h3>
+      <p style="margin-top:6px;">自作の限界を超える本格アプリは、PHJコンサルタントへ代行依頼。理事長は的確な「発注力」を磨きます。</p>
+    </div>
+    <div class="callout">
+      <span class="ci">🎯</span>
+      <span>「自分で作る」から「的確に発注する」へ。<strong>できることの範囲が一気に広がる</strong>のが次回です。</span>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 10</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

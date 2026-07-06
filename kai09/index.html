@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラムA 第9回｜総括と自走化ロードマップ ― 内製文化の定着</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --orange:#D97757; --orange-lt:#C15F3C; --orange-dk:#A8481F; --amber:#E39440;
+  --bg:#FFFFFF; --bg2:#FAF9F5; --surface:rgba(217,119,87,0.07); --border:rgba(217,119,87,0.32);
+  --border-lt:#E8E4DD; --text:#29261F; --muted:#6E6759; --muted2:#9C948A;
+  --mono:'SF Mono','Menlo','Monaco','Courier New',monospace;
+}
+body { font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic Medium',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; }
+.slide { display:none; width:100vw; height:100vh; padding:52px 72px 72px; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.slide.active { display:flex; animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+.bg-1 { background:radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background:var(--bg2); }
+.bg-3 { background:radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+.slide::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%); opacity:.9; }
+.slide-num { position:absolute; bottom:28px; right:52px; font-size:12px; font-family:var(--mono); color:var(--muted2); letter-spacing:2px; }
+h1 { font-size:52px; font-weight:800; line-height:1.15; letter-spacing:-.02em; }
+h2 { font-size:38px; font-weight:700; line-height:1.2; margin-bottom:32px; letter-spacing:-.01em; }
+h3 { font-size:20px; font-weight:600; line-height:1.4; }
+p { line-height:1.7; }
+.accent { color:var(--orange-lt); } .amber { color:#A16207; } .muted { color:var(--muted); }
+.section-label { display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:2px; font-family:var(--mono); color:var(--orange-lt); margin-bottom:16px; }
+.section-label::before { content:'❯'; color:var(--orange); font-weight:800; }
+.tag { display:inline-block; background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 3px; }
+.card { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:14px; padding:24px 20px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.card.o { border-left:3px solid var(--orange); } .card.a { border-left:3px solid var(--amber); } .card.g { border-left:3px solid #16A34A; } .card.r { border-left:3px solid #DC2626; } .card.w { border-left:3px solid var(--muted2); }
+.card .icon { font-size:28px; margin-bottom:10px; }
+.card .label { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); color:var(--muted2); margin-bottom:6px; }
+.card h3 { font-size:18px; margin-bottom:8px; }
+.card p { font-size:14px; color:var(--muted); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g-50-50 { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.checklist { list-style:none; }
+.checklist li { font-size:16px; color:var(--text); padding:9px 0 9px 28px; border-bottom:1px solid var(--border-lt); position:relative; line-height:1.5; }
+.checklist li::before { content:'✓'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+.step { display:flex; align-items:flex-start; gap:18px; padding:18px 0; border-bottom:1px solid var(--border-lt); }
+.step:last-child { border-bottom:none; }
+.step-num { min-width:40px; height:40px; background:linear-gradient(135deg, var(--orange), var(--amber)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; flex-shrink:0; }
+.step h3 { font-size:19px; margin-bottom:5px; } .step p { font-size:14px; color:var(--muted); }
+.hl { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 22px; font-size:15px; line-height:1.7; color:var(--text); }
+.hl.center { text-align:center; }
+.flow { display:flex; flex-direction:column; align-items:center; gap:0; }
+.flow-item { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:12px; padding:14px 28px; font-size:17px; font-weight:600; text-align:center; min-width:420px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.flow-item.hot { background:var(--surface); border-color:var(--orange); }
+.flow-item .who { font-size:11px; letter-spacing:2px; color:var(--muted2); font-family:var(--mono); display:block; margin-bottom:2px; }
+.flow-item.hot .who { color:var(--orange-lt); }
+.flow-arrow { font-size:18px; color:var(--muted2); padding:6px 0; }
+.hflow { display:flex; align-items:stretch; gap:0; }
+.hflow-item { flex:1; background:#fff; border:1px solid var(--border-lt); border-radius:12px; padding:14px 10px; text-align:center; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.hflow-item .hn { font-size:11px; font-family:var(--mono); color:var(--orange-lt); font-weight:700; margin-bottom:6px; }
+.hflow-item h3 { font-size:15px; margin-bottom:4px; }
+.hflow-item p { font-size:12px; color:var(--muted); line-height:1.5; }
+.hflow-arrow { display:flex; align-items:center; padding:0 6px; color:var(--muted2); font-size:16px; }
+.vs-wrap { display:grid; grid-template-columns:1fr 48px 1fr; gap:0; align-items:stretch; margin-top:8px; }
+.vs-box { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:16px; padding:28px 24px; text-align:center; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.vs-box.highlight-box { background:var(--surface); border-color:var(--orange); }
+.vs-box .vs-title { font-size:11px; letter-spacing:3px; font-family:var(--mono); color:var(--muted2); margin-bottom:10px; }
+.vs-box h3 { font-size:24px; font-weight:700; margin-bottom:14px; }
+.vs-box p { font-size:14px; color:var(--muted); line-height:1.7; }
+.vs-divider { display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--muted2); }
+.day-row { display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid var(--border-lt); }
+.day-row:last-child { border-bottom:none; }
+.day-badge { min-width:56px; background:var(--surface); border:1px solid var(--border); border-radius:7px; text-align:center; padding:5px 0; font-size:12px; font-weight:700; color:var(--orange-dk); flex-shrink:0; }
+.day-row p { font-size:15px; color:var(--text); }
+.warn { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:12px 18px; font-size:14px; color:#B91C1C; }
+.kw { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:10px; padding:15px 16px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.kw .kw-num { font-size:10px; color:var(--orange-lt); font-weight:700; letter-spacing:1px; font-family:var(--mono); margin-bottom:4px; }
+.kw .kw-title { font-size:15px; font-weight:700; margin-bottom:5px; }
+.kw .kw-desc { font-size:12px; color:var(--muted); line-height:1.55; }
+.footer-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity:.6; }
+.callout { display:flex; align-items:flex-start; gap:12px; background:rgba(227,148,64,0.08); border:1px solid rgba(227,148,64,0.35); border-radius:10px; padding:14px 18px; font-size:14px; color:var(--text); line-height:1.6; }
+.callout .ci { font-size:18px; flex-shrink:0; }
+.terminal { background:#1F1D1A; border-radius:14px; padding:18px 22px 20px; font-family:var(--mono); font-size:13px; line-height:1.8; color:#E8E4DD; box-shadow:0 8px 24px rgba(41,38,31,0.18); }
+.terminal .dots { display:flex; gap:7px; margin-bottom:12px; }
+.terminal .dots span { width:11px; height:11px; border-radius:50%; }
+.terminal .dots span:nth-child(1) { background:#FF5F57; } .terminal .dots span:nth-child(2) { background:#FEBC2E; } .terminal .dots span:nth-child(3) { background:#28C840; }
+.terminal .cm { color:#9C948A; } .terminal .kw2 { color:#D97757; font-weight:700; } .terminal .st { color:#7BC97E; } .terminal .tp { color:#D97757; font-weight:700; }
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+.ledger { width:100%; border-collapse:collapse; font-size:13px; }
+.ledger th { background:var(--surface); color:var(--orange-dk); font-weight:700; text-align:left; padding:9px 12px; border:1px solid var(--border-lt); font-size:12px; }
+.ledger td { padding:9px 12px; border:1px solid var(--border-lt); color:var(--text); }
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border:1px solid var(--border-lt); border-radius:50px; padding:8px 18px; box-shadow:0 4px 16px rgba(41,38,31,0.10); z-index:100; }
+.nav button { background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.nav button:hover { background:var(--orange); color:#fff; border-color:var(--orange); }
+.nav-cnt { font-size:13px; font-family:var(--mono); color:var(--muted); min-width:56px; text-align:center; }
+.progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--orange), var(--amber)); transition:width .3s ease; z-index:200; }
+@media print { @page { size:1920px 1080px; margin:0; } *,*::before,*::after { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } html,body { width:1920px; height:1080px; overflow:visible; background:#FFFFFF !important; } .nav,.progress { display:none !important; } .slide { display:none !important; } .slide.active { display:flex !important; width:1920px !important; height:1080px !important; padding:72px 108px 100px !important; position:relative !important; overflow:hidden !important; animation:none !important; } }
+.big { font-size:72px; font-weight:900; color:var(--orange-lt); line-height:1.2; }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="pill">PROGRAM A ・ 第9回（最終回）/ 全9回</div>
+      <h1>総括と<br><span class="accent">自走化ロードマップ</span></h1>
+      <p style="font-size:20px; color:var(--muted); margin-top:14px; line-height:1.6;">
+        ― 内製文化の定着
+      </p>
+      <p style="font-size:16px; color:var(--muted); margin-top:10px; line-height:1.7;">
+        プログラム終了後も法人が自走できる体制を整える
+      </p>
+      <div style="margin-top:24px;">
+        <span class="tag">社会福祉法人ふるさと 御中</span>
+        <span class="tag">北島 淳朗 理事長</span>
+      </div>
+    </div>
+    <div>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="cm"># 9か月の到達点</span><br><br>
+        <span class="st">✓ AI職員を設計・運用できる</span><br>
+        <span class="st">✓ 定型業務を仕組み化できる</span><br>
+        <span class="st">✓ 道具を作り・つなげられる</span><br>
+        <span class="st">✓ 経営判断の下書きを任せられる</span><br>
+        <span class="st">✓ 本格アプリを的確に発注できる</span><br><br>
+        <span class="kw2">→ 法人が「自走」する状態へ</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 9回の歩み -->
+<div class="slide bg-2">
+  <div class="section-label">これまでの歩み ― 全9回の振り返り</div>
+  <h2>9か月で、ここまで<span class="accent">できるようになりました</span></h2>
+  <div class="g3" style="gap:12px;">
+    <div class="kw"><div class="kw-num">第1回</div><div class="kw-title">導入から雇用へ</div><div class="kw-desc">発想の転換・知恵と智慧・三層戦略</div></div>
+    <div class="kw"><div class="kw-num">第2回</div><div class="kw-title">CLAUDE.md</div><div class="kw-desc">AI職員の就業規則を記述</div></div>
+    <div class="kw"><div class="kw-num">第3回</div><div class="kw-title">サブエージェント</div><div class="kw-desc">専門職員を設計・使い分け</div></div>
+    <div class="kw"><div class="kw-num">第4回</div><div class="kw-title">スキルとコマンド</div><div class="kw-desc">定型業務を仕組み化・属人化解消</div></div>
+    <div class="kw"><div class="kw-num">第5回</div><div class="kw-title">アプリ①</div><div class="kw-desc">対話で道具を生成</div></div>
+    <div class="kw"><div class="kw-num">第6回</div><div class="kw-title">アプリ②（MCP）</div><div class="kw-desc">Google・PhAIと連携</div></div>
+    <div class="kw"><div class="kw-num">第7回</div><div class="kw-title">経営課題を渡す</div><div class="kw-desc">意思決定支援・下書き量産</div></div>
+    <div class="kw"><div class="kw-num">第8回</div><div class="kw-title">作成代行・発注力</div><div class="kw-desc">本格アプリを的確に発注</div></div>
+    <div class="kw" style="background:var(--surface); border-color:var(--border);"><div class="kw-num" style="color:var(--orange-lt);">第9回</div><div class="kw-title">総括・自走化</div><div class="kw-desc">内製文化の定着（本日）</div></div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 今回のねらい -->
+<div class="slide bg-3">
+  <div class="section-label">第9回 ― ねらい</div>
+  <h2>最終回で仕上げる<span class="accent">3つのこと</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">ねらい 1</div><div class="kw-title">📒 AI職員台帳の整備</div><div class="kw-desc">作ったAI職員・スキル・アプリを一覧で管理。誰が見てもわかる状態に。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 2</div><div class="kw-title">💴 トークン予算の管理</div><div class="kw-desc">トークン費＝人件費として予算化。費用対効果で判断できる仕組みに。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 3</div><div class="kw-title">🗺️ ロードマップ策定</div><div class="kw-desc">推進担当者を育て、次の半期の展開計画を描く。自走の体制へ。</div></div>
+  </div>
+  <div class="hl" style="margin-top:22px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🎯 第9回の到達目標</p>
+    <p style="font-size:16px; font-weight:600;">内製文化を定着させる ― ふるさと版『AI活用ロードマップ』と『AI職員台帳』を完成させる。</p>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ AI職員台帳 -->
+<div class="slide bg-1">
+  <div class="section-label">自走の道具 ① ― AI職員台帳</div>
+  <h2>作ったものを<span class="accent">「台帳」</span>で管理する</h2>
+  <div style="margin-bottom:16px;">
+    <table class="ledger">
+      <tr><th>名称</th><th>種別</th><th>役割・用途</th><th>担当</th><th>状態</th></tr>
+      <tr><td>議事録要約職員</td><td>サブエージェント</td><td>会議記録を要点に整理</td><td>事務</td><td>運用中</td></tr>
+      <tr><td>規程チェック職員</td><td>サブエージェント</td><td>文書と内規の整合確認</td><td>事務</td><td>運用中</td></tr>
+      <tr><td>月次理事会資料</td><td>スキル</td><td>資料の下書きを自動生成</td><td>理事長</td><td>運用中</td></tr>
+      <tr><td>行事アンケート集計</td><td>アプリ</td><td>満足度の集計・可視化</td><td>各事業所</td><td>試作</td></tr>
+    </table>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    台帳があれば、<span class="accent">誰が見ても「何があり、誰が使い、どう保守するか」</span>がわかる。属人化を防ぎ、組織の資産になります。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ トークン予算 -->
+<div class="slide bg-2">
+  <div class="section-label">自走の道具 ② ― トークン予算</div>
+  <h2>トークン費 = <span class="accent">人件費として予算化</span>する</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        第1回で学んだ<strong style="color:var(--text);">「トークンコスト＝人件費」</strong>を、運用に落とし込みます。月いくらまで、どの業務にどれだけ使うか。<strong style="color:var(--text);">予算として管理</strong>すれば、経費削減の話ではなく<strong style="color:var(--text);">投資判断</strong>になります。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        「この職員（AI）は月◯円で、これだけの成果を出している」——<span class="accent">費用対効果で語れる状態</span>が自走の土台です。
+      </div>
+    </div>
+    <div>
+      <div class="card o" style="margin-bottom:12px;">
+        <div class="label">見える化する項目</div>
+        <div class="day-row"><div class="day-badge" style="min-width:64px;">予算</div><p style="font-size:14px;">月あたりの上限を決める</p></div>
+        <div class="day-row"><div class="day-badge" style="min-width:64px;">実績</div><p style="font-size:14px;">設定画面で使用量を確認</p></div>
+        <div class="day-row" style="border-bottom:none;"><div class="day-badge" style="min-width:64px;">効果</div><p style="font-size:14px;">短縮できた時間・成果物の数</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ 推進担当者の育成 -->
+<div class="slide bg-3">
+  <div class="section-label">自走の要 ― 推進担当者の育成</div>
+  <h2>理事長ひとりから、<span class="accent">組織の力</span>へ</h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-item hot"><span class="who">今</span>理事長が旗を振る</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">次に</span>推進担当者（次世代）を育てる</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">最終的に</span>各事業所に広がり、文化になる</div>
+    </div>
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        自走とは、<strong style="color:var(--text);">理事長がいなくても回ること</strong>。台帳・就業規則（CLAUDE.md）・スキルが「見える形」で残っているから、次の担当者に引き継げます。
+      </p>
+      <div class="callout">
+        <span class="ci">🌱</span>
+        <span>属人化を解消してきた9か月の積み重ねが、そのまま<strong>「引き継げる仕組み」</strong>になっています。育成のハードルは、もう下がっています。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ 三層戦略の完成 -->
+<div class="slide bg-1">
+  <div class="section-label">三層戦略の完成</div>
+  <h2>現場PhAI × 連携Google × 経営Claude が<span class="accent">つながる</span></h2>
+  <div style="margin-top:4px;">
+    <div class="day-row" style="padding:15px 0;">
+      <div class="day-badge" style="min-width:88px; font-size:13px;">経営</div>
+      <div><h3 style="font-size:18px; margin-bottom:3px;">Claude Code（プログラムA）</h3><p style="font-size:14px; color:var(--muted);">理事長が「発注力」と内製文化を獲得。経営判断をAI職員が下支え。</p></div>
+    </div>
+    <div class="day-row" style="padding:15px 0;">
+      <div class="day-badge" style="min-width:88px; font-size:13px;">連携</div>
+      <div><h3 style="font-size:18px; margin-bottom:3px;">Google Workspace</h3><p style="font-size:14px; color:var(--muted);">カレンダー・ドキュメントで、経営と現場をデータでつなぐ。</p></div>
+    </div>
+    <div class="day-row" style="padding:15px 0;">
+      <div class="day-badge" style="min-width:88px; font-size:13px;">現場</div>
+      <div><h3 style="font-size:18px; margin-bottom:3px;">PhAI カスタムチャット（プログラムB）</h3><p style="font-size:14px; color:var(--muted);">現場が「内製力」を獲得。記録・相談・コーチをカスタムチャットで支援。</p></div>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:18px; font-size:16px; font-weight:600;">
+    プログラムAで経営が、Bで現場が変わり、Googleがつなぐ。<span class="accent">法人全体のAI活用基盤が完成</span>します。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ 自走化ロードマップ -->
+<div class="slide bg-2">
+  <div class="section-label">自走化ロードマップ ― 次の半期へ</div>
+  <h2>プログラム後の<span class="accent">半年計画</span>を描く</h2>
+  <div class="hflow" style="margin-bottom:20px;">
+    <div class="hflow-item"><div class="hn">〜1か月</div><h3>📒 台帳を運用</h3><p>AI職員台帳を回し、使用量を確認</p></div>
+    <div class="hflow-arrow">→</div>
+    <div class="hflow-item"><div class="hn">〜3か月</div><h3>👥 担当者を育成</h3><p>推進担当者に運用を移譲</p></div>
+    <div class="hflow-arrow">→</div>
+    <div class="hflow-item"><div class="hn">〜4か月</div><h3>🏥 各事業所へ展開</h3><p>特養・GH・小多機へ横展開</p></div>
+    <div class="hflow-arrow">→</div>
+    <div class="hflow-item"><div class="hn">〜6か月</div><h3>🔗 A×B×Google</h3><p>三層を接続し全体最適へ</p></div>
+  </div>
+  <div class="callout">
+    <span class="ci">🗺️</span>
+    <span><strong>成果物：</strong>ふるさと版『AI活用ロードマップ』。次の半期に「誰が・何を・いつまでに」を明確にし、自走の道筋を1枚にまとめます。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ 成果物・到達確認 -->
+<div class="slide bg-3">
+  <div class="section-label">第9回 ― 成果物・到達確認</div>
+  <h2>プログラムA、<span class="accent">修了の確認</span></h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">📦 完成する成果物</p>
+      <div class="card o" style="margin-bottom:12px; padding:16px 18px;"><h3 style="font-size:17px;">📒 AI職員台帳</h3><p style="margin-top:4px;">作ったAI職員・スキル・アプリの一覧と運用状態。</p></div>
+      <div class="card o" style="padding:16px 18px;"><h3 style="font-size:17px;">🗺️ AI活用ロードマップ</h3><p style="margin-top:4px;">次の半期の展開計画（誰が・何を・いつまでに）。</p></div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 修了時の到達</p>
+      <ul class="checklist">
+        <li>AI職員を自ら設計・運用できる</li>
+        <li>定型業務を仕組み化し属人化を解消できる</li>
+        <li>道具を作り、既存ツールと連携できる</li>
+        <li>経営判断の下書きをAIに任せられる</li>
+        <li>本格アプリを的確に発注できる</li>
+        <li>台帳・予算・担当者で自走できる</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 締め -->
+<div class="slide bg-1">
+  <div class="section-label">修了にあたって</div>
+  <h2 style="margin-bottom:28px;">AIが担うのは知恵。<br><span class="accent">法人の理念と、人に向き合う智慧</span>は、変わらず理事長のもとに。</h2>
+  <div class="g3" style="gap:16px; margin-bottom:26px;">
+    <div class="card o"><div class="icon">🤖</div><h3>知恵は任せる</h3><p>調べる・書く・整理する作業をAI職員が担い、時間を生み出す。</p></div>
+    <div class="card a"><div class="icon">⏰</div><h3>時間を取り戻す</h3><p>生まれた時間を、ご利用者・ご家族・職員に向き合うことへ。</p></div>
+    <div class="card g"><div class="icon">🌱</div><h3>NEXT KAIGOへ</h3><p>AIはあくまで方便。目的は、科学的・自立支援的なケアの質向上。</p></div>
+  </div>
+  <div class="hl center" style="font-size:18px; font-weight:600; line-height:1.8;">
+    9か月間、ありがとうございました。<br>
+    <span class="accent">ここからは、育てた「AI職員」とともに、法人の自走が始まります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 10</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

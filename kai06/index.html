@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラムA 第6回｜アプリの作り方② ― データ連携と外部接続（MCP）</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --orange:#D97757; --orange-lt:#C15F3C; --orange-dk:#A8481F; --amber:#E39440;
+  --bg:#FFFFFF; --bg2:#FAF9F5; --surface:rgba(217,119,87,0.07); --border:rgba(217,119,87,0.32);
+  --border-lt:#E8E4DD; --text:#29261F; --muted:#6E6759; --muted2:#9C948A;
+  --mono:'SF Mono','Menlo','Monaco','Courier New',monospace;
+}
+body { font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic Medium',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; }
+.slide { display:none; width:100vw; height:100vh; padding:52px 72px 72px; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.slide.active { display:flex; animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+.bg-1 { background:radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background:var(--bg2); }
+.bg-3 { background:radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+.slide::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%); opacity:.9; }
+.slide-num { position:absolute; bottom:28px; right:52px; font-size:12px; font-family:var(--mono); color:var(--muted2); letter-spacing:2px; }
+h1 { font-size:54px; font-weight:800; line-height:1.15; letter-spacing:-.02em; }
+h2 { font-size:38px; font-weight:700; line-height:1.2; margin-bottom:32px; letter-spacing:-.01em; }
+h3 { font-size:20px; font-weight:600; line-height:1.4; }
+p { line-height:1.7; }
+.accent { color:var(--orange-lt); } .amber { color:#A16207; } .muted { color:var(--muted); }
+.section-label { display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:2px; font-family:var(--mono); color:var(--orange-lt); margin-bottom:16px; }
+.section-label::before { content:'❯'; color:var(--orange); font-weight:800; }
+.tag { display:inline-block; background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 3px; }
+.card { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:14px; padding:24px 20px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.card.o { border-left:3px solid var(--orange); } .card.a { border-left:3px solid var(--amber); } .card.g { border-left:3px solid #16A34A; } .card.r { border-left:3px solid #DC2626; } .card.w { border-left:3px solid var(--muted2); }
+.card .icon { font-size:28px; margin-bottom:10px; }
+.card .label { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); color:var(--muted2); margin-bottom:6px; }
+.card h3 { font-size:18px; margin-bottom:8px; }
+.card p { font-size:14px; color:var(--muted); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g-50-50 { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.checklist { list-style:none; }
+.checklist li { font-size:17px; color:var(--text); padding:10px 0 10px 28px; border-bottom:1px solid var(--border-lt); position:relative; line-height:1.5; }
+.checklist li::before { content:'✓'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+.step { display:flex; align-items:flex-start; gap:18px; padding:18px 0; border-bottom:1px solid var(--border-lt); }
+.step:last-child { border-bottom:none; }
+.step-num { min-width:40px; height:40px; background:linear-gradient(135deg, var(--orange), var(--amber)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; flex-shrink:0; }
+.step h3 { font-size:19px; margin-bottom:5px; } .step p { font-size:14px; color:var(--muted); }
+.hl { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 22px; font-size:15px; line-height:1.7; color:var(--text); }
+.hl.center { text-align:center; }
+.flow { display:flex; flex-direction:column; align-items:center; gap:0; }
+.flow-item { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:12px; padding:14px 28px; font-size:17px; font-weight:600; text-align:center; min-width:420px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.flow-item.hot { background:var(--surface); border-color:var(--orange); }
+.flow-item .who { font-size:11px; letter-spacing:2px; color:var(--muted2); font-family:var(--mono); display:block; margin-bottom:2px; }
+.flow-item.hot .who { color:var(--orange-lt); }
+.flow-arrow { font-size:18px; color:var(--muted2); padding:6px 0; }
+.vs-wrap { display:grid; grid-template-columns:1fr 48px 1fr; gap:0; align-items:stretch; margin-top:8px; }
+.vs-box { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:16px; padding:28px 24px; text-align:center; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.vs-box.highlight-box { background:var(--surface); border-color:var(--orange); }
+.vs-box .vs-title { font-size:11px; letter-spacing:3px; font-family:var(--mono); color:var(--muted2); margin-bottom:10px; }
+.vs-box h3 { font-size:24px; font-weight:700; margin-bottom:14px; }
+.vs-box p { font-size:14px; color:var(--muted); line-height:1.7; }
+.vs-divider { display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:var(--muted2); }
+.day-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--border-lt); }
+.day-row:last-child { border-bottom:none; }
+.day-badge { min-width:56px; background:var(--surface); border:1px solid var(--border); border-radius:7px; text-align:center; padding:5px 0; font-size:12px; font-weight:700; color:var(--orange-dk); flex-shrink:0; }
+.day-row p { font-size:15px; color:var(--text); }
+.warn { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.25); border-radius:10px; padding:12px 18px; font-size:14px; color:#B91C1C; }
+.kw { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:10px; padding:16px 18px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.kw .kw-num { font-size:10px; color:var(--orange-lt); font-weight:700; letter-spacing:1px; font-family:var(--mono); margin-bottom:4px; }
+.kw .kw-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+.kw .kw-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+.footer-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity:.6; }
+.callout { display:flex; align-items:flex-start; gap:12px; background:rgba(227,148,64,0.08); border:1px solid rgba(227,148,64,0.35); border-radius:10px; padding:14px 18px; font-size:14px; color:var(--text); line-height:1.6; }
+.callout .ci { font-size:18px; flex-shrink:0; }
+.terminal { background:#1F1D1A; border-radius:14px; padding:18px 22px 20px; font-family:var(--mono); font-size:13.5px; line-height:1.85; color:#E8E4DD; box-shadow:0 8px 24px rgba(41,38,31,0.18); }
+.terminal .dots { display:flex; gap:7px; margin-bottom:12px; }
+.terminal .dots span { width:11px; height:11px; border-radius:50%; }
+.terminal .dots span:nth-child(1) { background:#FF5F57; } .terminal .dots span:nth-child(2) { background:#FEBC2E; } .terminal .dots span:nth-child(3) { background:#28C840; }
+.terminal .cm { color:#9C948A; } .terminal .kw2 { color:#D97757; font-weight:700; } .terminal .st { color:#7BC97E; } .terminal .tp { color:#D97757; font-weight:700; }
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+.hub { display:flex; align-items:center; justify-content:center; gap:0; }
+.hub-center { background:var(--surface); border:2px solid var(--orange); border-radius:14px; padding:18px 22px; text-align:center; font-weight:800; font-size:18px; color:var(--orange-dk); min-width:150px; }
+.hub-spokes { display:flex; flex-direction:column; gap:10px; margin-left:40px; position:relative; }
+.hub-node { background:#fff; border:1px solid var(--border-lt); border-radius:10px; padding:10px 18px; font-size:15px; font-weight:600; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border:1px solid var(--border-lt); border-radius:50px; padding:8px 18px; box-shadow:0 4px 16px rgba(41,38,31,0.10); z-index:100; }
+.nav button { background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.nav button:hover { background:var(--orange); color:#fff; border-color:var(--orange); }
+.nav-cnt { font-size:13px; font-family:var(--mono); color:var(--muted); min-width:56px; text-align:center; }
+.progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--orange), var(--amber)); transition:width .3s ease; z-index:200; }
+@media print { @page { size:1920px 1080px; margin:0; } *,*::before,*::after { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } html,body { width:1920px; height:1080px; overflow:visible; background:#FFFFFF !important; } .nav,.progress { display:none !important; } .slide { display:none !important; } .slide.active { display:flex !important; width:1920px !important; height:1080px !important; padding:72px 108px 100px !important; position:relative !important; overflow:hidden !important; animation:none !important; } }
+.big { font-size:72px; font-weight:900; color:var(--orange-lt); line-height:1.2; }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <div class="pill">PROGRAM A ・ 第6回 / 全9回</div>
+      <h1>アプリの作り方 ②<br><span class="accent">データ連携（MCP）</span></h1>
+      <p style="font-size:20px; color:var(--muted); margin-top:14px; line-height:1.6;">
+        ― Google や PhAI とつなぐ
+      </p>
+      <p style="font-size:16px; color:var(--muted); margin-top:10px; line-height:1.7;">
+        既存の道具とつなぎ、実務で使える形に発展させる
+      </p>
+      <div style="margin-top:24px;">
+        <span class="tag">社会福祉法人ふるさと 御中</span>
+        <span class="tag">Claude Code 経営者養成</span>
+      </div>
+    </div>
+    <div>
+      <div class="hub">
+        <div class="hub-center">Claude<br>Code</div>
+        <div class="hub-spokes">
+          <div class="hub-node">📅 Googleカレンダー</div>
+          <div class="hub-node">📄 Googleドキュメント</div>
+          <div class="hub-node">📊 スプレッドシート</div>
+          <div class="hub-node">💬 PhAI（現場）</div>
+        </div>
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin-top:14px; text-align:center;">↑ MCPで、既存ツールと横断してつながる</p>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 前回の振り返り -->
+<div class="slide bg-2">
+  <div class="section-label">前回（第5回）の振り返り</div>
+  <h2>コードなしで<span class="accent">道具</span>が作れました</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">おさらい 1</div><div class="kw-title">🧩 対話でアプリ生成</div><div class="kw-desc">集計表・チェックリスト・ダッシュボードを対話で作りました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 2</div><div class="kw-title">🌱 方便としてのアプリ</div><div class="kw-desc">完璧を求めず、まず小さく作って試す発想を学びました。</div></div>
+    <div class="kw"><div class="kw-num">おさらい 3</div><div class="kw-title">🔒 安全に試す</div><div class="kw-desc">個人情報を入れない試作から始めました。</div></div>
+  </div>
+  <div class="callout" style="margin-top:22px;">
+    <span class="ci">🔗</span>
+    <span>前回の道具は「単体で動く」もの。今日は<strong>Google や PhAI など既存の道具とつなぎ、実務のデータで動く</strong>形にします。三層戦略の「連携にGoogle」が形になる回です。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 今回のねらい -->
+<div class="slide bg-3">
+  <div class="section-label">第6回 ― ねらい</div>
+  <h2>今回、身につけていただく<span class="accent">3つのこと</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">ねらい 1</div><div class="kw-title">🔌 MCPという仕組み</div><div class="kw-desc">外部ツール・データへの接続の仕組み。概念を、安全な範囲で体験します。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 2</div><div class="kw-title">🗂️ 役割分担を知る</div><div class="kw-desc">Google連携（連携にGoogle）とPhAI（現場）の役割分担を整理します。</div></div>
+    <div class="kw"><div class="kw-num">ねらい 3</div><div class="kw-title">🛡️ 承認を挟む運用</div><div class="kw-desc">接続時のセキュリティと「承認を挟む」考え方。つなぐほど慎重に。</div></div>
+  </div>
+  <div class="hl" style="margin-top:22px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:6px;">🎯 第6回の到達目標</p>
+    <p style="font-size:16px; font-weight:600;">Google等の既存ツールと接続する ― カレンダー／ドキュメント連携を体験し、実務シナリオを設計する。</p>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ MCPとは -->
+<div class="slide bg-1">
+  <div class="section-label">MCPとは</div>
+  <h2>MCP = 道具と道具を<span class="accent">つなぐ「配線」</span></h2>
+  <div class="g-50-50" style="align-items:center;">
+    <div>
+      <p style="font-size:16px; color:var(--muted); line-height:1.9; margin-bottom:16px;">
+        これまで、Notion は Notion、Google は Google、Zoom は Zoom——と<strong style="color:var(--text);">別々に人が見に行って</strong>いました。<br><br>
+        MCPは、それらを Claude Code につなぐ<strong style="color:var(--text);">「配線」</strong>。つなぐと、AIが横断して情報を取りに行き・まとめられるようになります。
+      </p>
+      <div class="hl" style="font-size:15px; font-weight:600;">
+        AIが<span class="accent">自分の業務環境の中に入ってくる</span>イメージ。ここが実務で一番効いてきます。
+      </div>
+    </div>
+    <div class="flow">
+      <div class="flow-item"><span class="who">これまで</span>ツールごとに人が確認</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item hot"><span class="who">MCPでつなぐと</span>AIが横断して取得・整理</div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-item"><span class="who">結果</span>「調べて・まとめて・作る」が一気に</div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ 役割分担 -->
+<div class="slide bg-2">
+  <div class="section-label">連携の全体像 ― 三層戦略の「連携にGoogle」</div>
+  <h2>何を、どこにつなぐか ― <span class="accent">役割分担</span></h2>
+  <div class="g3" style="gap:16px;">
+    <div class="card o">
+      <div class="label">経営</div>
+      <h3>🧑‍💼 Claude Code</h3>
+      <p>司令塔。各ツールをつなぎ、経営判断の下書き・資料づくりを横断で進める。</p>
+    </div>
+    <div class="card a">
+      <div class="label">連携</div>
+      <h3>🔗 Google Workspace</h3>
+      <p>カレンダー・ドキュメント・スプレッドシート。現場と経営をつなぐ「共通の置き場」。</p>
+    </div>
+    <div class="card g">
+      <div class="label">現場</div>
+      <h3>💬 PhAI（プログラムB）</h3>
+      <p>介護記録・申し送りなど現場業務を直接支援。個人情報は現場側で安全に扱う。</p>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:22px; font-size:16px; font-weight:600;">
+    経営（Claude）と現場（PhAI）を<span class="accent">Google がつなぐ</span>。この三層が、法人全体のAI活用基盤になります。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ 承認を挟む運用 -->
+<div class="slide bg-3">
+  <div class="section-label">安全 ― 承認を挟む運用</div>
+  <h2>つなぐほど、<span class="accent">「承認を挟む」</span>を徹底する</h2>
+  <div class="g2" style="margin-bottom:18px;">
+    <div class="card o">
+      <div class="label">読み取り（安全度：高）</div>
+      <h3>👀 まずは「見るだけ」から</h3>
+      <p style="margin-top:6px;">カレンダーやドキュメントを「読んで・まとめる」用途から始める。情報を取り出すだけなら影響が小さい。</p>
+    </div>
+    <div class="card r">
+      <div class="label">書き込み・送信（要注意）</div>
+      <h3>✋ 実行前に必ず確認</h3>
+      <p style="margin-top:6px;">予定の追加・文書の更新・外部送信は、必ず人が内容を確認してから承認。自動で走らせない。</p>
+    </div>
+  </div>
+  <div class="warn">
+    🔑 接続時は<strong>権限を最小限に</strong>。個人情報を含む領域は特に慎重に。第2回のCLAUDE.md（禁止事項）と、この「承認を挟む」運用を二重の歯止めにします。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ 実務シナリオ例 -->
+<div class="slide bg-1">
+  <div class="section-label">実務シナリオ例</div>
+  <h2>つなぐと、こんなことが<span class="accent">一気に</span>できる</h2>
+  <div class="g3" style="gap:16px;">
+    <div class="kw"><div class="kw-num">シナリオ 1</div><div class="kw-title">📅 予定の下ごしらえ</div><div class="kw-desc">カレンダーの来週の予定を読み、準備すべき資料・議題を一覧に整理する。</div></div>
+    <div class="kw"><div class="kw-num">シナリオ 2</div><div class="kw-title">📄 資料の横断作成</div><div class="kw-desc">ドキュメントの過去議事録を参照し、次回理事会資料の下書きに反映する。</div></div>
+    <div class="kw"><div class="kw-num">シナリオ 3</div><div class="kw-title">📊 数値の集約</div><div class="kw-desc">スプレッドシートの稼働率を読み、月次の推移を分析・要約する。</div></div>
+  </div>
+  <div class="callout" style="margin-top:22px;">
+    <span class="ci">💡</span>
+    <span>これらは第4回のスキル・第5回のアプリと組み合わせると効果倍増。<strong>「つないで・作って・呼び出す」</strong>が揃うと、経営の道具が実務レベルになります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ ハンズオン -->
+<div class="slide bg-2">
+  <div class="section-label">第6回 ― ハンズオン</div>
+  <h2>カレンダー／ドキュメント連携を<span class="accent">体験する</span></h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div><h3>読み取りから接続する</h3><p>Googleカレンダー／ドキュメントを、まず「読むだけ」の権限で安全に接続します。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div><h3>横断して使ってみる</h3><p>「来週の予定を読んで、準備物を一覧にして」——AIが横断して情報を取り、整理する様子を確認。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div><h3>実務シナリオを設計する</h3><p>自法人で効きそうな連携シナリオを1つ選び、「何を読み・何を作るか」を設計します。</p></div>
+  </div>
+  <div class="callout" style="margin-top:16px;">
+    <span class="ci">✅</span>
+    <span><strong>成果物：</strong>連携の体験設計（実務シナリオ1件）。どの業務を、どのツールとつなぐと効くかの見取り図ができます。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ 到達確認 -->
+<div class="slide bg-3">
+  <div class="section-label">第6回 ― 到達確認</div>
+  <h2>今日の<span class="accent">到達確認チェックリスト</span></h2>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:16px;">以下を自分の言葉で説明できれば、第6回の内容は身についています。</p>
+  <ul class="checklist">
+    <li>MCP＝外部ツール・データへの接続の仕組みだとわかる</li>
+    <li>Google（連携）とPhAI（現場）の役割分担が言える</li>
+    <li>読み取りから始め、書き込み・送信は承認を挟む運用がわかる</li>
+    <li>接続は権限を最小限に、という安全の考え方がわかる</li>
+    <li>カレンダー／ドキュメント連携を体験し、実務シナリオを設計した</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 宿題・次回予告 -->
+<div class="slide bg-1">
+  <div class="section-label">第6回 ― 宿題・次回予告</div>
+  <h2>宿題・成果物と、<span class="accent">次回のご案内</span></h2>
+  <div class="hl" style="margin-bottom:20px;">
+    <p style="font-size:13px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">📝 次回までの宿題・成果物</p>
+    <p style="font-size:18px; font-weight:700;">連携したい既存ツール・データを洗い出す</p>
+    <p style="font-size:14px; color:var(--muted); margin-top:6px;">例：理事会スケジュール（カレンダー）／稼働率表（スプレッドシート）／過去議事録（ドキュメント）。「読むだけで効くもの」から挙げます。</p>
+  </div>
+  <div class="g-50-50">
+    <div class="card o">
+      <div class="label">次回（第7回）のテーマ</div>
+      <h3>経営課題をエージェントに渡す ― 意思決定支援</h3>
+      <p style="margin-top:6px;">日々の経営判断（分析・計画・文書）の“下書き”をAI職員に任せ、理事長は判断に専念します。</p>
+    </div>
+    <div class="callout">
+      <span class="ci">🧭</span>
+      <span>第1〜6回で「職員・手順書・道具・連携」が揃いました。次回は、それらを使って<strong>実際の経営テーマを1つ、通しで動かします。</strong></span>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 10</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>
