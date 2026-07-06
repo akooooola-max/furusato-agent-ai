@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社会福祉法人ふるさと｜エージェントAI内製化 コンサルティングプログラム 全体像</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --orange:#D97757; --orange-lt:#C15F3C; --orange-dk:#A8481F; --amber:#E39440;
+  --bg:#FFFFFF; --bg2:#FAF9F5; --surface:rgba(217,119,87,0.07); --border:rgba(217,119,87,0.32);
+  --border-lt:#E8E4DD; --text:#29261F; --muted:#6E6759; --muted2:#9C948A;
+  --mono:'SF Mono','Menlo','Monaco','Courier New',monospace;
+}
+body { font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic Medium',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; user-select:none; }
+.slide { display:none; width:100vw; height:100vh; padding:52px 72px 72px; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.slide.active { display:flex; animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+.bg-1 { background:radial-gradient(ellipse 70% 80% at 85% 30%, rgba(217,119,87,.06) 0%, var(--bg) 65%); }
+.bg-2 { background:var(--bg2); }
+.bg-3 { background:radial-gradient(ellipse 80% 60% at 15% 90%, rgba(227,148,64,.07) 0%, var(--bg) 60%); }
+.slide::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg, var(--orange) 0%, var(--amber) 60%, transparent 100%); opacity:.9; }
+.slide-num { position:absolute; bottom:28px; right:52px; font-size:12px; font-family:var(--mono); color:var(--muted2); letter-spacing:2px; }
+h1 { font-size:50px; font-weight:800; line-height:1.18; letter-spacing:-.02em; }
+h2 { font-size:36px; font-weight:700; line-height:1.2; margin-bottom:28px; letter-spacing:-.01em; }
+h3 { font-size:20px; font-weight:600; line-height:1.4; }
+p { line-height:1.7; }
+.accent { color:var(--orange-lt); } .amber { color:#A16207; } .muted { color:var(--muted); }
+.section-label { display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:2px; font-family:var(--mono); color:var(--orange-lt); margin-bottom:16px; }
+.section-label::before { content:'❯'; color:var(--orange); font-weight:800; }
+.tag { display:inline-block; background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 3px; }
+.card { background:#FFFFFF; border:1px solid var(--border-lt); border-radius:14px; padding:22px 20px; box-shadow:0 1px 3px rgba(41,38,31,0.05); }
+.card.o { border-left:3px solid var(--orange); } .card.a { border-left:3px solid var(--amber); } .card.g { border-left:3px solid #16A34A; } .card.r { border-left:3px solid #DC2626; } .card.w { border-left:3px solid var(--muted2); }
+.card .icon { font-size:28px; margin-bottom:10px; }
+.card .label { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); color:var(--muted2); margin-bottom:6px; }
+.card h3 { font-size:18px; margin-bottom:8px; }
+.card p { font-size:14px; color:var(--muted); }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.g-50-50 { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.checklist { list-style:none; }
+.checklist li { font-size:16px; color:var(--text); padding:9px 0 9px 28px; border-bottom:1px solid var(--border-lt); position:relative; line-height:1.5; }
+.checklist li::before { content:'✓'; position:absolute; left:0; color:var(--orange); font-weight:700; }
+.hl { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 22px; font-size:15px; line-height:1.7; color:var(--text); }
+.hl.center { text-align:center; }
+.day-row { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--border-lt); }
+.day-row:last-child { border-bottom:none; }
+.day-badge { min-width:56px; background:var(--surface); border:1px solid var(--border); border-radius:7px; text-align:center; padding:5px 0; font-size:12px; font-weight:700; color:var(--orange-dk); flex-shrink:0; }
+.day-row p { font-size:15px; color:var(--text); }
+.callout { display:flex; align-items:flex-start; gap:12px; background:rgba(227,148,64,0.08); border:1px solid rgba(227,148,64,0.35); border-radius:10px; padding:14px 18px; font-size:14px; color:var(--text); line-height:1.6; }
+.callout .ci { font-size:18px; flex-shrink:0; }
+.pill { display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700; font-family:var(--mono); letter-spacing:1px; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+.sched { width:100%; border-collapse:collapse; font-size:13px; }
+.sched th { background:var(--surface); color:var(--orange-dk); font-weight:700; text-align:left; padding:8px 10px; border:1px solid var(--border-lt); font-size:12px; }
+.sched td { padding:8px 10px; border:1px solid var(--border-lt); color:var(--text); vertical-align:top; }
+.sched td.no { font-weight:700; color:var(--orange-lt); text-align:center; }
+.sched td.date { font-family:var(--mono); font-size:12px; white-space:nowrap; }
+.sched tr:nth-child(even) td { background:var(--bg2); }
+.curlist { list-style:none; }
+.curlist li { display:flex; gap:12px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--border-lt); font-size:14px; }
+.curlist li:last-child { border-bottom:none; }
+.curlist .n { font-family:var(--mono); font-weight:700; color:var(--orange-lt); min-width:26px; font-size:13px; }
+.curlist .t { font-weight:700; color:var(--text); }
+.curlist .d { color:var(--muted); font-size:13px; }
+.footer-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--orange) 0%, var(--amber) 40%, transparent 80%); opacity:.6; }
+.nav { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border:1px solid var(--border-lt); border-radius:50px; padding:8px 18px; box-shadow:0 4px 16px rgba(41,38,31,0.10); z-index:100; }
+.nav button { background:var(--surface); border:1px solid var(--border); color:var(--orange-dk); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.nav button:hover { background:var(--orange); color:#fff; border-color:var(--orange); }
+.nav-cnt { font-size:13px; font-family:var(--mono); color:var(--muted); min-width:56px; text-align:center; }
+.progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--orange), var(--amber)); transition:width .3s ease; z-index:200; }
+@media print { @page { size:1920px 1080px; margin:0; } *,*::before,*::after { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; } html,body { width:1920px; height:1080px; overflow:visible; background:#FFFFFF !important; } .nav,.progress { display:none !important; } .slide { display:none !important; } .slide.active { display:flex !important; width:1920px !important; height:1080px !important; padding:72px 108px 100px !important; position:relative !important; overflow:hidden !important; animation:none !important; } }
+.big { font-size:64px; font-weight:900; color:var(--orange-lt); line-height:1.2; }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- ① 表紙 -->
+<div class="slide bg-1 active">
+  <div class="pill">エージェントAI内製化 コンサルティングプログラム ご提案</div>
+  <h1>社会福祉法人ふるさと 御中<br><span class="accent">AI職員を「雇用」する</span>、9か月の内製化プログラム</h1>
+  <p style="font-size:19px; color:var(--muted); margin-top:18px; line-height:1.7;">
+    Claude Code（経営）× PhAI カスタムチャット（現場）の二本立て・各全9回<br>
+    〜「導入」ではなく「雇用」する。現場にPhAI、連携にGoogle、経営にClaude〜
+  </p>
+  <div style="margin-top:30px;">
+    <span class="tag">北島 淳朗 理事長</span>
+    <span class="tag">ポスト・ヒューマン・ジャパン株式会社</span>
+    <span class="tag">NEXT KAIGO の推進を加速する「方便」</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- ② 貴法人について -->
+<div class="slide bg-2">
+  <div class="section-label">ご提案の前提 ― 貴法人について</div>
+  <h2>NEXT KAIGO を掲げる、<span class="accent">先進的なケア</span>の実践者</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:15px; color:var(--muted); line-height:1.9;">
+        昭和51年の特養開設以来およそ<strong style="color:var(--text);">50年</strong>にわたり、西海市の高齢者福祉を担ってこられました。特養（ショート）・居宅介護支援・グループホーム・小規模多機能などを運営し、<strong style="color:var(--text);">職員約117名</strong>の体制で地域の拠点となっておられます。
+      </p>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ 本プログラムの核となる前提</p>
+      <div class="card o" style="margin-bottom:12px;">
+        <h3 style="font-size:17px;">🔬 科学的自立支援介護</h3>
+        <p style="margin-top:4px;">水分・栄養・歩行・排泄。データに基づく自立支援に先進的に取り組む。</p>
+      </div>
+      <div class="card o">
+        <h3 style="font-size:17px;">🫁 誤嚥性肺炎ゼロプロジェクト</h3>
+        <p style="margin-top:4px;">専門的口腔ケアによる、質の高いケアの追求。</p>
+      </div>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:18px; font-size:16px; font-weight:600;">
+    本プログラムは“AI活用そのもの”ではなく、<span class="accent">既に掲げる NEXT KAIGO を加速する「方便（手だて）」</span>として生成AIを位置づけます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- ③ 貫く思想 -->
+<div class="slide bg-3">
+  <div class="section-label">貫く思想</div>
+  <h2>生成AIを「導入」ではなく<span class="accent">「雇用」</span>する</h2>
+  <div class="g2" style="margin-bottom:18px;">
+    <div class="card r">
+      <div class="label">従来 ― ITツールの導入</div>
+      <h3>😞 経費・現場の負担</h3>
+      <p style="margin-top:6px;">コストは経費に計上され、削減対象に。目的が抽象的で定着しにくい。</p>
+    </div>
+    <div class="card o">
+      <div class="label">本プログラム ― 職員として雇用</div>
+      <h3>💪 人件費・戦力</h3>
+      <p style="margin-top:6px;">トークンコストは“IT費”ではなく<strong style="color:var(--orange-lt);">“人件費”</strong>。任せる作業（知恵）と人が担う判断（智慧）を切り分ける。</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    AIを、<span class="accent">人の力を活かす「方便（手だて）」</span>として位置づける。これが全編を貫く発想です。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- ④ 三層戦略 -->
+<div class="slide bg-1">
+  <div class="section-label">三層戦略</div>
+  <h2>現場に<span class="accent">PhAI</span> ／ 連携に<span class="accent">Google</span> ／ 経営に<span class="accent">Claude</span></h2>
+  <div style="margin-top:4px;">
+    <div class="day-row" style="padding:16px 0;">
+      <div class="day-badge" style="min-width:80px; font-size:13px;">経営</div>
+      <div><h3 style="font-size:18px; margin-bottom:3px;">Claude（Claude Code）― プログラムA</h3><p style="font-size:14px; color:var(--muted);">理事長自らがエージェントAIを“雇用”し、経営判断を支援。</p></div>
+    </div>
+    <div class="day-row" style="padding:16px 0;">
+      <div class="day-badge" style="min-width:80px; font-size:13px;">連携</div>
+      <div><h3 style="font-size:18px; margin-bottom:3px;">Google（Workspace 等）</h3><p style="font-size:14px; color:var(--muted);">両プログラム内で外部連携（カレンダー・ドキュメント等）として接続。</p></div>
+    </div>
+    <div class="day-row" style="padding:16px 0;">
+      <div class="day-badge" style="min-width:80px; font-size:13px;">現場</div>
+      <div><h3 style="font-size:18px; margin-bottom:3px;">PhAI（法人向けChatGPT）― プログラムB</h3><p style="font-size:14px; color:var(--muted);">記録・文書・接遇などの現場業務を支えるカスタムチャットを内製。</p></div>
+    </div>
+  </div>
+  <div class="hl center" style="margin-top:18px; font-size:16px; font-weight:600;">
+    Bで現場が変わり、Aで経営が変わり、両者を<span class="accent">Googleがつなぐ</span>。これが本ご提案の全体像です。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- ⑤ 二本立て全体像 -->
+<div class="slide bg-2">
+  <div class="section-label">本プログラムの全体設計</div>
+  <h2>二本立て・各全9回で、<span class="accent">9か月</span>で基盤を整える</h2>
+  <div class="g2" style="margin-bottom:18px;">
+    <div class="card o">
+      <div class="label">プログラムA（午前 10:00〜12:00）</div>
+      <h3>🧑‍💼 Claude Code 経営者養成</h3>
+      <p style="margin-top:6px;">対象：北島理事長（＋次世代のAI推進担当者）。ハンズオン中心の少人数個別指導。<br>講師：PHJ エージェントAIコンサルタント／アプリ作成代行：一松 浩太</p>
+    </div>
+    <div class="card a">
+      <div class="label">プログラムB（午後 13:00〜14:50）</div>
+      <h3>💬 PhAI カスタムチャット作成支援</h3>
+      <p style="margin-top:6px;">対象：各事業所のリーダー・現場職員・AI推進担当者。ニーズ／ご提案駆動の共創型ワークショップ。<br>講師：谷本 正徳（代表取締役社長）</p>
+    </div>
+  </div>
+  <div class="hl center" style="font-size:16px; font-weight:600;">
+    両プログラムは独立受講も可能。<span class="accent">並走することで相乗効果</span>を発揮し、法人全体のAI活用基盤を9か月でひと通り整えます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- ⑥ プログラムA一覧 -->
+<div class="slide bg-3">
+  <div class="section-label">カリキュラム一覧 ― プログラムA（経営）</div>
+  <h2>Claude Code エージェントAI <span class="accent">経営者養成</span></h2>
+  <ul class="curlist">
+    <li><span class="n">1</span><span><span class="t">「導入」から「雇用」へ</span> <span class="d">／ 発想の転換と環境準備 ・ 初期設定と最初の対話</span></span></li>
+    <li><span class="n">2</span><span><span class="t">環境設定とCLAUDE.md</span> <span class="d">／ 法人ルールをAIに記憶させる ・ ふるさと版 CLAUDE.md</span></span></li>
+    <li><span class="n">3</span><span><span class="t">AI職員の作り方①：役割（サブエージェント）設計</span> <span class="d">／ 専門特化のAI職員2体</span></span></li>
+    <li><span class="n">4</span><span><span class="t">AI職員の作り方②：スキルとコマンド</span> <span class="d">／ 定型業務を標準化・属人化解消</span></span></li>
+    <li><span class="n">5</span><span><span class="t">アプリの作り方①：経営の道具を組む</span> <span class="d">／ 対話で業務ツールを生成</span></span></li>
+    <li><span class="n">6</span><span><span class="t">アプリの作り方②：データ連携（MCP）</span> <span class="d">／ Google等の既存ツールと接続</span></span></li>
+    <li><span class="n">7</span><span><span class="t">経営課題をエージェントに渡す</span> <span class="d">／ 意思決定支援としての活用</span></span></li>
+    <li><span class="n">8</span><span><span class="t">作成代行の活用とニーズ整理</span> <span class="d">／ 発注力を磨き本格アプリを依頼（一松との協働）</span></span></li>
+    <li><span class="n">9</span><span><span class="t">総括と自走化ロードマップ</span> <span class="d">／ 内製文化の定着・AI職員台帳</span></span></li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- ⑦ プログラムB一覧 -->
+<div class="slide bg-1">
+  <div class="section-label">カリキュラム一覧 ― プログラムB（現場）</div>
+  <h2>PhAI カスタムチャット <span class="accent">作成支援</span></h2>
+  <ul class="curlist">
+    <li><span class="n">1</span><span><span class="t">PhAIカスタムチャット入門／現場の業務棚卸し</span> <span class="d">／ 効きどころの特定・ニーズ一覧</span></span></li>
+    <li><span class="n">2</span><span><span class="t">システムプロンプト設計の基礎</span> <span class="d">／ 設計図を書ける・1本目の試作</span></span></li>
+    <li><span class="n">3</span><span><span class="t">科学的自立支援介護教育コンサルタントAI</span> <span class="d">／ NEXT KAIGOの教育・記録を支援</span></span></li>
+    <li><span class="n">4</span><span><span class="t">スーパー生活相談員AI</span> <span class="d">／ 相談援助・家族対応・連携を支援</span></span></li>
+    <li><span class="n">5</span><span><span class="t">事務・経営管理チャット（規程・通知・人事）</span> <span class="d">／ バックオフィス効率化</span></span></li>
+    <li><span class="n">6</span><span><span class="t">職員コーチAI・役職者コーチAI</span> <span class="d">／ 1on1・面談・育成を支援</span></span></li>
+    <li><span class="n">7</span><span><span class="t">品質管理とプロンプト改善</span> <span class="d">／ 改善サイクルを回す・評価/改版ルール</span></span></li>
+    <li><span class="n">8</span><span><span class="t">理事長クローンAI（経営者クローン）の構築</span> <span class="d">／ 理念・判断を反映し共創</span></span></li>
+    <li><span class="n">9</span><span><span class="t">定着とガバナンス／三層戦略の完成</span> <span class="d">／ 全社展開と自走体制</span></span></li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- ⑧ 日程表 -->
+<div class="slide bg-2">
+  <div class="section-label">全日程 ― 2026年7月 〜 2027年3月</div>
+  <h2>各回とも<span class="accent">午前A・午後B</span>を実施</h2>
+  <table class="sched">
+    <tr><th>回</th><th>実施予定日</th><th>プログラムA（10:00–12:00）</th><th>プログラムB（13:00–14:50）</th></tr>
+    <tr><td class="no">1</td><td class="date">2026/07/30(木)</td><td>「導入」から「雇用」へ</td><td>入門・業務棚卸し</td></tr>
+    <tr><td class="no">2</td><td class="date">2026/08/24(月)</td><td>環境設定とCLAUDE.md</td><td>システムプロンプト設計の基礎</td></tr>
+    <tr><td class="no">3</td><td class="date">2026/09/29(火)</td><td>AI職員の作り方①（役割設計）</td><td>科学的自立支援介護教育コンサルAI</td></tr>
+    <tr><td class="no">4</td><td class="date">2026/10/26(月)</td><td>AI職員の作り方②（スキル・コマンド）</td><td>スーパー生活相談員AI</td></tr>
+    <tr><td class="no">5</td><td class="date">2026/11/27(金)</td><td>アプリの作り方①</td><td>事務・経営管理チャット</td></tr>
+    <tr><td class="no">6</td><td class="date">2026/12/25(金)</td><td>アプリの作り方②（データ連携・MCP）</td><td>職員コーチAI・役職者コーチAI</td></tr>
+    <tr><td class="no">7</td><td class="date">2027/01/18(月)</td><td>経営課題をエージェントに渡す</td><td>品質管理とプロンプト改善</td></tr>
+    <tr><td class="no">8</td><td class="date">2027/02/16(火)</td><td>作成代行の活用とニーズ整理</td><td>理事長クローンAIの構築</td></tr>
+    <tr><td class="no">9</td><td class="date">2027/03/16(火)</td><td>総括と自走化ロードマップ</td><td>定着とガバナンス</td></tr>
+  </table>
+  <p style="font-size:12px; color:var(--muted2); margin-top:10px;">※ 実施予定日はGoogleカレンダー登録分。内容・時間配分は当日のニーズに応じて調整する場合があります。</p>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- ⑨ 並走の相乗効果 -->
+<div class="slide bg-3">
+  <div class="section-label">二つのプログラムの連携と進め方</div>
+  <h2>並走による<span class="accent">相乗効果</span></h2>
+  <div class="g3" style="gap:16px; margin-bottom:18px;">
+    <div class="card o"><div class="icon">🔄</div><h3>ニーズが循環する</h3><p>B（現場）で抽出した業務ニーズが、A（経営）の代行アプリ開発テーマになる。</p></div>
+    <div class="card a"><div class="icon">🤝</div><h3>両輪で自走する</h3><p>Aで理事長が「発注力」を、Bで現場が「内製力」を身につけ、双方が法人の自走を支える。</p></div>
+    <div class="card g"><div class="icon">🏛️</div><h3>9か月で一巡</h3><p>現場・連携・経営の三層が一巡し、法人全体のAI活用基盤がひと通り整う。</p></div>
+  </div>
+  <div class="callout">
+    <span class="ci">🔒</span>
+    <span><strong>運用上の前提：</strong>個人情報を扱う場合は<strong>同意取得・安全管理措置・シャドーAI禁止</strong>のルールに沿って進めます。毎回ハンズオン／共創を中心に、宿題と成果物を積み上げて「使える状態」を作ります。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- ⑩ 体制・締め -->
+<div class="slide bg-1">
+  <div class="section-label">ご提供体制</div>
+  <h2>すべては、<span class="accent">NEXT KAIGO（ケアの質向上）</span>のために</h2>
+  <div class="g3" style="gap:16px; margin-bottom:24px;">
+    <div class="card o"><div class="label">プログラムA 講師</div><h3>PHJ エージェントAIコンサルタント</h3><p style="margin-top:4px;">Claude Code 担当</p></div>
+    <div class="card o"><div class="label">アプリ作成代行</div><h3>一松 浩太</h3><p style="margin-top:4px;">PHJコンサルタント ／ ニーズのあるアプリを代行開発</p></div>
+    <div class="card a"><div class="label">プログラムB 講師</div><h3>谷本 正徳</h3><p style="margin-top:4px;">代表取締役社長 ／ PhAIカスタムチャット作成をご支援</p></div>
+  </div>
+  <div class="hl center" style="font-size:17px; font-weight:600; line-height:1.8;">
+    AI活用が“ケアの質向上”という本来の目的に結びつくよう設計します。<br>
+    <span class="accent">ポスト・ヒューマン・ジャパン株式会社</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)" title="前へ">&#8592;</button>
+  <span class="nav-cnt" id="cnt">1 / 10</span>
+  <button onclick="go(1)" title="次へ">&#8594;</button>
+</div>
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  function go(d) {
+    slides[cur].classList.remove('active');
+    cur = (cur + d + total) % total;
+    slides[cur].classList.add('active');
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + total;
+    document.getElementById('prog').style.width = ((cur + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown'].includes(e.key)) go(1);
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) go(-1);
+  });
+  document.getElementById('prog').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>
