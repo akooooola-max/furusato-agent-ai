@@ -2741,10 +2741,177 @@ p  { line-height: 1.7; }
   <div class="slide-num">75</div>
 </div>
 
+<!-- ▼▼▼ 番外編 ①：全体像 ▼▼▼ -->
+<div class="slide bg-1">
+  <div class="section-label">番外編 ― Claude Code × Obsidian</div>
+  <h2>AIが読みに行ける<span class="accent">「第二の脳」</span>を作る（30〜40分）</h2>
+  <p style="font-size:15px; color:var(--muted); line-height:1.8; margin-bottom:16px;">
+    さらに使いこなしたい方向けの番外編です。Claude Code と <strong style="color:var(--text);">Obsidian（無料ノートアプリ）</strong>をつなぎ、AIが自分のノートを読み書きできる「箱」を作ります。環境構築だけに絞って、まず<strong style="color:var(--text);">「動く箱」</strong>を完成させます。
+  </p>
+  <div class="g3" style="gap:14px;">
+    <div class="kw"><div class="kw-num">STEP 1 ・ 10分</div><div class="kw-title">🤖 Claude Code + Cursor</div><div class="kw-desc">AIがPC上のファイルを扱える準備</div></div>
+    <div class="kw"><div class="kw-num">STEP 2 ・ 10分</div><div class="kw-title">📓 Obsidian</div><div class="kw-desc">ノートを置くVault（箱）を作る</div></div>
+    <div class="kw"><div class="kw-num">STEP 3 ・ 5分</div><div class="kw-title">🔌 連携スキル</div><div class="kw-desc">AIがObsidianを扱う道具を入れる</div></div>
+    <div class="kw"><div class="kw-num">STEP 4 ・ 5分</div><div class="kw-title">✅ 動作確認</div><div class="kw-desc">/wiki と要約で接続を確認</div></div>
+    <div class="kw"><div class="kw-num">STEP 5 ・ 1分</div><div class="kw-title">📋 完了確認</div><div class="kw-desc">チェックリストで抜け漏れを潰す</div></div>
+    <div class="kw" style="display:flex; align-items:center; justify-content:center;"><p style="font-size:14px; color:var(--text); text-align:center;"><strong style="color:var(--orange-lt);">GOAL：</strong>AIがVault内のファイルを読める状態</p></div>
+  </div>
+  <div class="hl center" style="margin-top:18px; font-size:15px; font-weight:600;">
+    ※「何を入れるか（中身の設計）」は人により正解が変わります。ここでは<span class="accent">まず箱を完成</span>させます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">76</div>
+</div>
+
+<!-- ▼▼▼ 番外編 ②：STEP1 ▼▼▼ -->
+<div class="slide bg-2">
+  <div class="section-label">番外編 STEP 1 ― Claude Code + Cursor</div>
+  <h2>AIエディター<span class="accent">Cursor</span>の中で Claude Code を動かす</h2>
+  <div class="g-50-50" style="align-items:start;">
+    <div>
+      <div class="card o" style="margin-bottom:12px;">
+        <div class="label">Cursor とは</div>
+        <p style="margin-top:4px;">AIが編集を手伝う<strong style="color:var(--text);">無料</strong>のエディター（VSCodeベース）。この中からClaude Code(CLI版)を動かすと、閲覧・編集・指示が1画面で完結。<strong>課金はClaude Code側だけ</strong>でOK。</p>
+      </div>
+      <div class="card w">
+        <div class="label">料金プラン（まずは最安から）</div>
+        <div class="day-row" style="padding:8px 0;"><div class="day-badge" style="min-width:88px;">Pro $20</div><p style="font-size:14px;">まず始めるならこれ</p></div>
+        <div class="day-row" style="padding:8px 0;"><div class="day-badge" style="min-width:88px;">Max5x $100</div><p style="font-size:14px;">本格運用するなら</p></div>
+        <div class="day-row" style="padding:8px 0; border-bottom:none;"><div class="day-badge" style="min-width:88px;">Max20x $200</div><p style="font-size:14px;">ヘビーユーザー向け</p></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px; color:var(--muted); font-weight:600; margin-bottom:8px;">インストール手順</p>
+      <div class="terminal">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="tc"># ① Cursor を入れる（cursor.com・無料）</span><br>
+        <span class="tc"># ② Node.js の LTS版 を入れる（nodejs.org）</span><br>
+        <span class="tc"># ③ Cursorのターミナルで実行：</span><br>
+        <span class="tp">$</span> npm install -g @anthropic-ai/claude-code<br><br>
+        <span class="tc"># ④ 起動を確認：</span><br>
+        <span class="tp">$</span> claude<br>
+        <span class="tg">✻ Claude Code 起動！</span>
+      </div>
+      <div class="callout" style="margin-top:12px;">
+        <span class="ci">💡</span>
+        <span>詰まったら、Claudeのチャット(claude.ai)に「Claude Code CLI版をMac(/Windows)に入れたい。手順を教えて」と聞けば、環境に合わせて案内してくれます。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">77</div>
+</div>
+
+<!-- ▼▼▼ 番外編 ③：STEP2 ▼▼▼ -->
+<div class="slide bg-3">
+  <div class="section-label">番外編 STEP 2 ― Obsidian で「箱」を作る</div>
+  <h2><span class="accent">Obsidian</span> = AIが直接読み書きできるノート</h2>
+  <div class="g-50-50">
+    <div>
+      <p style="font-size:14px; color:var(--orange-lt); font-weight:700; margin-bottom:8px;">✓ Obsidianの特徴</p>
+      <ul class="checklist" style="margin-bottom:14px;">
+        <li style="font-size:15px;">ローカル保存（データは全部自分のPCの中）</li>
+        <li style="font-size:15px;">マークダウン形式＝Claude Codeが直接読める</li>
+        <li style="font-size:15px;">[[リンク]]でノートをつなげる</li>
+      </ul>
+      <div class="callout">
+        <span class="ci">❓</span>
+        <span>なぜNotionでなくObsidian？ → <strong>プレーンテキスト＝AIが直接いじれる</strong>から。「保存(Obsidian)」と「実行(Claude Code)」がまっすぐつながります。</span>
+      </div>
+    </div>
+    <div>
+      <div class="card o" style="margin-bottom:12px;">
+        <div class="label">やること</div>
+        <p style="margin-top:4px;">obsidian.md からインストール → <strong style="color:var(--text);">Create new vault</strong>（Vault＝ノートの保管フォルダ）を作成。</p>
+      </div>
+      <div class="card a">
+        <div class="label">最初に作る2ファイル（中身は空でOK）</div>
+        <div class="day-row" style="padding:8px 0;"><div class="day-badge" style="min-width:96px;">Memory.md</div><p style="font-size:14px;">AIに自分を説明する箱</p></div>
+        <div class="day-row" style="padding:8px 0; border-bottom:none;"><div class="day-badge" style="min-width:96px;">Home.md</div><p style="font-size:14px;">主要ノートへの入口（目次）</p></div>
+      </div>
+      <div class="callout" style="margin-top:12px;">
+        <span class="ci">🔄</span>
+        <span>VaultをGoogle Drive内に置くと、自宅PCと会社PCで自動同期されます。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">78</div>
+</div>
+
+<!-- ▼▼▼ 番外編 ④：STEP3 ▼▼▼ -->
+<div class="slide bg-1">
+  <div class="section-label">番外編 STEP 3 ― 連携スキルを入れる</div>
+  <h2>Claude Code と Obsidian をつなぐ<span class="accent">2つの道具</span></h2>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="card o">
+      <div class="label">① 基盤層</div>
+      <h3>🧱 obsidian-skills</h3>
+      <p style="margin-top:6px;">AIに「Obsidianの正しい操作方法」を教えるスキルセット。<strong style="color:var(--text);">Obsidian CEO（Steph Ango氏）</strong>が作っている安心感。<br><span style="font-family:var(--mono); font-size:12px; color:var(--muted2);">GitHub: kepano/obsidian-skills</span></p>
+    </div>
+    <div class="card a">
+      <div class="label">② 応用層</div>
+      <h3>🧠 claude-obsidian</h3>
+      <p style="margin-top:6px;">AIに「第二の脳を構築・維持させる」スキルセット。<strong style="color:var(--text);">/wiki</strong>（初回セットアップ）や <strong style="color:var(--text);">ingest</strong>（素材の自動整理）が使える。<br><span style="font-family:var(--mono); font-size:12px; color:var(--muted2);">GitHub: AgriciDaniel/claude-obsidian</span></p>
+    </div>
+  </div>
+  <div class="terminal">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <span class="tc"># プラグインとして入れる（Claude Codeが入っている前提）</span><br>
+    <span class="tp">$</span> claude plugin marketplace add AgriciDaniel/claude-obsidian<br>
+    <span class="tp">$</span> claude plugin install claude-obsidian@claude-obsidian-marketplace
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">79</div>
+</div>
+
+<!-- ▼▼▼ 番外編 ⑤：STEP4 ▼▼▼ -->
+<div class="slide bg-2">
+  <div class="section-label">番外編 STEP 4 ― 動作確認</div>
+  <h2><span class="accent">つながったか</span>を確認する</h2>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">1</div>
+    <div><h3>VaultをCursorで開く</h3><p>「File」→「Open Folder」で、作ったVaultのフォルダを開く。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">2</div>
+    <div><h3><span style="font-family:var(--mono);">/wiki</span> を実行する</h3><p>ターミナルで claude を起動し <span style="font-family:var(--mono);">/wiki</span> と打つ。AIが初回のVault構造（.raw/ wiki/ など）を自動で作れば成功。</p></div>
+  </div>
+  <div class="step" style="padding:14px 0;">
+    <div class="step-num">3</div>
+    <div><h3>ノート要約を頼む</h3><p>Vault内のノートを開いた状態で「このノートを要約して」。AIがファイルを読んで答えたら<strong style="color:var(--orange-lt);">連携完了</strong>。</p></div>
+  </div>
+  <div class="callout" style="margin-top:14px;">
+    <span class="ci">🎉</span>
+    <span>これで<strong>「Obsidianに貯める → Claude Codeが読みに行く」</strong>の土台が完成。AIが自分のノートを文脈として使えるようになりました。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">80</div>
+</div>
+
+<!-- ▼▼▼ 番外編 ⑥：STEP5 ▼▼▼ -->
+<div class="slide bg-3">
+  <div class="section-label">番外編 STEP 5 ― 完了チェックリスト</div>
+  <h2>この<span class="accent">6項目</span>が揃えば完成</h2>
+  <ul class="checklist">
+    <li>Cursor が起動する</li>
+    <li>Cursor内のターミナルで Claude Code（claude）が起動する</li>
+    <li>Obsidian で Vault を作った</li>
+    <li>Memory.md と Home.md（空でOK）を作った</li>
+    <li>obsidian-skills / claude-obsidian の2つのスキルを入れた</li>
+    <li>/wiki が動く ＆「このノート要約して」に答える</li>
+  </ul>
+  <div class="hl center" style="margin-top:20px; font-size:16px; font-weight:600;">
+    箱（環境）が完成したら、次は<span class="accent">「何を入れるか（中身の設計）」</span>。ここは目的に合わせて育てていきます。
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">81</div>
+</div>
+
 <!-- ナビゲーション -->
 <div class="nav">
   <button onclick="go(-1)" title="前へ">&#8592;</button>
-  <span class="nav-cnt" id="cnt">1 / 75</span>
+  <span class="nav-cnt" id="cnt">1 / 81</span>
   <button onclick="go(1)" title="次へ">&#8594;</button>
 </div>
 
