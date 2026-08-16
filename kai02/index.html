@@ -406,6 +406,7 @@ slides.forEach((s, i) => {
   if (n) n.textContent = String(i + 1).padStart(2, '0');
 });
 let cur = 0;
+document.getElementById('cnt').textContent = '1 / ' + slides.length;
 function show(i){
   slides[cur].classList.remove('active');
   cur = (i + slides.length) % slides.length;
