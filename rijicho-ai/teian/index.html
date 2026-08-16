@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふるさと理事長AI 実装提案書</title>
+<style>
+  :root{
+    --ink:#1a2733; --sub:#5a6b7a; --accent:#1d6b5a; --accent-light:#e8f3f0;
+    --line:#d8e0e6; --bg:#f6f8f9; --card:#ffffff; --warn:#8a5a1d; --warn-bg:#fdf6ea;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    color:var(--ink); background:var(--bg); line-height:1.9; font-size:15px;
+  }
+  .page{max-width:860px; margin:0 auto; padding:48px 28px 80px;}
+  header.title{
+    background:var(--card); border:1px solid var(--line); border-top:6px solid var(--accent);
+    border-radius:10px; padding:40px 44px; margin-bottom:36px;
+  }
+  header.title .doc-type{color:var(--accent); font-weight:700; letter-spacing:.2em; font-size:13px; margin-bottom:10px;}
+  header.title h1{font-size:27px; line-height:1.5; margin-bottom:8px;}
+  header.title .subtitle{font-size:16px; color:var(--sub); margin-bottom:22px;}
+  header.title .meta{border-top:1px solid var(--line); padding-top:16px; font-size:14px; color:var(--sub);}
+  section{
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:34px 44px; margin-bottom:26px;
+  }
+  h2{
+    font-size:19px; color:var(--accent); margin-bottom:18px;
+    padding-bottom:10px; border-bottom:2px solid var(--accent-light);
+  }
+  h2 .num{
+    display:inline-block; background:var(--accent); color:#fff; border-radius:6px;
+    font-size:13px; padding:2px 9px; margin-right:10px; vertical-align:2px;
+  }
+  h3{font-size:16px; margin:22px 0 10px; color:var(--ink);}
+  p{margin-bottom:14px;}
+  strong{color:var(--accent); font-weight:700;}
+  ul,ol{margin:0 0 14px 24px;}
+  li{margin-bottom:6px;}
+  .lead{
+    background:var(--accent-light); border-left:4px solid var(--accent);
+    padding:16px 20px; border-radius:0 8px 8px 0; margin-bottom:18px;
+  }
+  .lead p{margin:0;}
+  table{width:100%; border-collapse:collapse; margin:14px 0 18px; font-size:14px;}
+  th{background:var(--accent-light); color:var(--ink); text-align:left; padding:10px 14px; border:1px solid var(--line); white-space:nowrap;}
+  td{padding:10px 14px; border:1px solid var(--line); vertical-align:top;}
+  .tree{
+    background:#f2f5f7; border:1px solid var(--line); border-radius:8px;
+    padding:20px 24px; font-family:"SF Mono",Menlo,Consolas,monospace;
+    font-size:13.5px; line-height:1.8; overflow-x:auto; white-space:pre; margin:14px 0 18px;
+  }
+  .tree .cm{color:var(--accent); }
+  .principle{
+    border:1px solid var(--line); border-radius:8px; padding:18px 22px; margin-bottom:14px;
+  }
+  .principle .p-title{font-weight:700; color:var(--accent); margin-bottom:6px;}
+  .phase{border-left:4px solid var(--accent); padding:4px 0 4px 20px; margin:20px 0;}
+  .phase .ph-title{font-weight:700; font-size:16px; margin-bottom:8px;}
+  .phase .goal{
+    display:inline-block; background:var(--warn-bg); color:var(--warn);
+    border-radius:6px; padding:3px 12px; font-size:13px; margin-top:8px;
+  }
+  .done{color:var(--accent); font-weight:700;}
+  .closing{text-align:right; margin-top:10px; color:var(--sub);}
+  footer{color:var(--sub); font-size:13px; text-align:center; margin-top:10px;}
+  @media print{
+    body{background:#fff;}
+    .page{padding:0;}
+    section, header.title{border:none; padding:20px 8px; margin-bottom:8px; break-inside:avoid;}
+  }
+  @media (max-width:600px){
+    header.title, section{padding:24px 20px;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="title">
+  <div class="doc-type">実装提案書</div>
+  <h1>ふるさと理事長AI 実装提案書</h1>
+  <div class="subtitle">構想を「動く組織」にするための設計と道筋</div>
+  <div class="meta">
+    社会福祉法人ふるさと　理事長 北島様<br>
+    2026年8月　作成：一松
+  </div>
+</header>
+
+<section>
+  <h2><span class="num">1</span>本提案の位置づけ</h2>
+  <p>7月31日に頂戴した「ふるさと理事長AI」構想（組織図・構想資料）への、実装のご提案です。</p>
+  <div class="lead"><p>先に結論を申し上げます。<strong>構想の骨格は、変える必要がありません。</strong>5室＋本部直属2機能という編成、加算を攻め（戦略室）と守り（コンプライアンス室）で分離する設計、検算役→内部監査室→理事長という統制ライン。いずれもAIによる経営組織の設計として、そのまま実装に耐えるものです。</p></div>
+  <p>本提案がお示しするのは、次の3点だけです。</p>
+  <ol>
+    <li>その組織を<strong>Claude Code上でどういう形にするか</strong>（実装の形）</li>
+    <li><strong>どの順番で立ち上げるか</strong>（段階ロードマップ）</li>
+    <li><strong>統制ラインをどう実際に効かせるか</strong>（検算役・内部監査室・稟議の実装）</li>
+  </ol>
+</section>
+
+<section>
+  <h2><span class="num">2</span>設計の3原則</h2>
+  <p>構想資料の「実装の考え方」と同じ方向です。実装にあたり、次の3つを憲法（CLAUDE.md）に固定します。</p>
+  <div class="principle">
+    <div class="p-title">原則1：番人箱は渡さない</div>
+    利用者の要配慮情報・職員の人事給与情報・<strong>符号台帳（符号と実名の対応表）</strong>は、AIに触れさせるフォルダに置きません。AI社員が扱うのは、公開情報（制度・報酬・統計）と、符号化・前処理済みのデータだけです。既に法人版マニュアルで整備されている線引きを、そのまま経営組織にも適用します。
+  </div>
+  <div class="principle">
+    <div class="p-title">原則2：設計は全体、着手は1室ずつ</div>
+    構想資料の結びの通りです。7室を一斉に立ち上げず、1室ずつ動かして、動いた室の型を次の室に写します。最初の1室が組織全体の雛形になります。
+  </div>
+  <div class="principle">
+    <div class="p-title">原則3：AIは起案まで、決裁は人</div>
+    AI社員の仕事は「調べる・分析する・起案する」までとし、<strong>外に出る操作・確定する操作（送信・公表・提出・契約）の直前には、必ず本文を提示して理事長の承認を取る</strong>ことを憲法に明記します。構想にある稟議承認を、そのまま憲法の条文にする形です。
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">3</span>実装の形 ― AI社員の実体は「部署ごとの役割定義書（CLAUDE.md）」</h2>
+  <p>北島様が既に作られたマニュアルの三本柱（①憲法 ②番地を振ったフォルダ ③再開の記録）を、そのまま組織に拡張します。<strong>AI社員1人＝部署フォルダ1つ＋その部署の役割定義書（CLAUDE.md）1枚</strong>です。</p>
+<div class="tree">furusato-ai/
+├── CLAUDE.md                 <span class="cm">← 憲法（3原則・番人箱・稟議ルール・全室共通の型）</span>
+├── 00_稟議箱/                <span class="cm">← 理事長の承認待ち成果物が集まる場所</span>
+├── 10_戦略室/
+│   ├── 外部環境分析部/CLAUDE.md
+│   ├── 加算戦略部/CLAUDE.md
+│   └── …
+├── 20_コンプライアンス室/
+│   └── 加算要件管理部/CLAUDE.md
+├── 90_内部監査室/CLAUDE.md   <span class="cm">← 独立。他室の成果物を横断点検</span>
+└── 99_記録/                  <span class="cm">← 各室の作業記録（再開の仕組み）</span></div>
+  <p>各部署の役割定義書（CLAUDE.md）に書くのは4つだけです。</p>
+  <table>
+    <tr><th>項目</th><th>例（加算戦略部の場合）</th></tr>
+    <tr><td>役割</td><td>加算を「収益」と「アウトカム」の両立で設計する</td></tr>
+    <tr><td>扱ってよい情報</td><td>厚労省・自治体の一次情報、符号化済みの算定実績</td></tr>
+    <tr><td>成果物の型</td><td>加算シナリオ試算表（根拠の出典URL必須）</td></tr>
+    <tr><td>禁止事項</td><td>番人箱・符号台帳に触れない／要件の断定をしない（一次情報照合を必須とする）</td></tr>
+  </table>
+  <p>この形の利点は、<strong>部署の増減が「フォルダとファイルの増減」だけで済む</strong>ことです。構想の「全部署フル配置ではなく、部署の重さで増減する」を、そのまま実現できます。</p>
+</section>
+
+<section>
+  <h2><span class="num">4</span>統制ラインの実装 ― 検算役・内部監査室・稟議</h2>
+  <p>構想の統制フロー「成果物 → 検算役 → 内部監査室 → 理事長」を、次のように実装します。</p>
+  <ul>
+    <li><strong>検算役</strong>：各部署の成果物テンプレートに検算チェックリスト（出典は一次情報か／番人箱に触れていないか／数字の計算根拠）を埋め込み、<strong>作った本人とは別のセッションのAIに点検させます。</strong>作る係と検算する係を同じ会話にしないことが要点です。</li>
+    <li><strong>内部監査室</strong>：独立したフォルダとCLAUDE.mdを持ち、週1回、全室の成果物と記録を横断で点検して、理事長だけに報告します。他室の指示を受けない設計にします。</li>
+    <li><strong>稟議</strong>：検算・監査を通った成果物は「00_稟議箱」に集まり、理事長が本文を確認して承認したものだけが外に出ます。承認前の自動送信は憲法で禁止します。</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="num">5</span>段階ロードマップ</h2>
+
+  <div class="phase">
+    <div class="ph-title">第0段階：土台（大部分は完了済みです）</div>
+    <ul>
+      <li>法人管理のアカウント整備 … <span class="done">済</span>（マニュアルで方針確定）</li>
+      <li>憲法・番人箱・符号化の線引き … <span class="done">済</span>（法人版マニュアルv3）</li>
+      <li>配布前研修の設計 … <span class="done">済</span>（v3に反映）</li>
+      <li>残り：符号台帳の本番移行、furusato-aiフォルダの初期設置</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="ph-title">第1段階：先発は「加算の攻守ペア」＋外部環境分析部（目安：1〜2か月目）</div>
+    <p>構想の「戦略室とコンプライアンス室を先発に」というお考えに賛成です。そのうえで、最初に動かす部署は次の3つをご提案します。</p>
+    <ol>
+      <li><strong>加算戦略部</strong>（攻め）：加算シナリオの試算・投資対効果の起案</li>
+      <li><strong>加算要件管理部</strong>（守り）：取得加算の要件維持点検・算定根拠の記録整備</li>
+      <li><strong>外部環境分析部</strong>：制度動向・報酬改定の一次情報ウォッチ（週報）</li>
+    </ol>
+    <p>理由は3つです。<strong>効果が金額で見える</strong>こと（加算・返還は円で測れます）。<strong>返還・減算リスクに直撃する</strong>こと（守りの失点防止が先）。そして<strong>扱う情報のほとんどが公開情報＋符号化済みデータで、番人箱に触れにくい</strong>こと（最初の1室として安全に練習できます）。</p>
+    <div class="goal">完了の目安：3部署の週次成果物が、検算役の点検を通って稟議箱に届く状態</div>
+  </div>
+
+  <div class="phase">
+    <div class="ph-title">第2段階：統制ラインの本稼働（目安：2〜3か月目）</div>
+    <p>内部監査室を立ち上げ、週次の横断監査と理事長直結報告を回します。ここまでで「攻め・守り・監査・決裁」の最小の組織が完成します。</p>
+    <div class="goal">完了の目安：監査報告が月4回、理事長に届いている状態</div>
+  </div>
+
+  <div class="phase">
+    <div class="ph-title">第3段階：残りの室を1室ずつ展開（目安：4か月目以降）</div>
+    <p>経営戦略部・財源開発部 → ブランディング室 → リスク管理室 → 人財室の順を目安とします。<strong>人事・評価・報酬部は最後</strong>です（番人箱に最も近く、構想資料でも検算役必須通過とされている部署のため、統制ラインが十分に枯れてから着手します）。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">6</span>動き出したときの1週間（イメージ）</h2>
+  <table>
+    <tr><th>曜日</th><th>動き</th></tr>
+    <tr><td>月</td><td>外部環境分析部が制度動向の週報を起案 → 検算役点検 → 稟議箱へ</td></tr>
+    <tr><td>火〜木</td><td>加算戦略部が週報を受けて加算シナリオを試算／加算要件管理部が算定根拠の点検表を更新</td></tr>
+    <tr><td>金</td><td>内部監査室が全成果物を横断点検 → 理事長へ直結報告。理事長は稟議箱を確認し、承認・差し戻し</td></tr>
+  </table>
+  <p>理事長のお仕事は「稟議箱を開いて、承認するか差し戻すか」に集約されます。これが本部長＝理事長の全体監視の実装です。</p>
+</section>
+
+<section>
+  <h2><span class="num">7</span>役割分担と進め方</h2>
+  <table>
+    <tr><th>役割</th><th>担当</th></tr>
+    <tr><td>本部長（決裁・全体監視）</td><td>北島理事長</td></tr>
+    <tr><td>運用（日次の実行・記録）</td><td>岩永次長 ほか法人ご指名の方</td></tr>
+    <tr><td>設計・型の提供・立ち上げ研修</td><td>一松</td></tr>
+    <tr><td>コンサルティング全体</td><td>谷本社長</td></tr>
+  </table>
+  <p>進め方は、現在のコンサルティングの訪問回に合わせて<strong>1回につき1部署、構成・役割定義・動かし方をご一緒に立ち上げる</strong>形をご提案します。私がお渡しするのは憲法・各部署の役割定義書（CLAUDE.md）・成果物テンプレート・検算チェックリストといった「型」で、実データの投入と日々の運用は、法人の皆様の手で行っていただきます。実データをお預かりしない形は、これまでのマニュアルと同じ整理です。</p>
+</section>
+
+<section>
+  <h2><span class="num">8</span>むすび</h2>
+  <p>構想資料の結びにあった「守りは失点を防ぎ、攻めで2040年を越える」という一文が、この組織のすべてだと受け止めております。本提案は、その一文を毎週の運用に落とすためのものです。</p>
+  <p>まずは第0段階の残り（符号台帳の本番移行・フォルダ初期設置）と、第1段階の先発3部署から。次回のお打ち合わせで、加算戦略部の役割定義書（CLAUDE.md）の実物をお見せできるよう準備いたします。</p>
+  <p>どうぞよろしくお願いいたします。</p>
+  <p class="closing">以上</p>
+</section>
+
+<footer>ふるさと理事長AI 実装提案書 v1 ／ 2026年8月</footer>
+</div>
+</body>
+</html>
