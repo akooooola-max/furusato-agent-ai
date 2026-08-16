@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハンズオン：加算戦略部を今日つくる（第2回 2026/8/24）</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --ink:#1a2733; --sub:#5a6b7a; --accent:#1d6b5a; --accent-dk:#14503f; --accent-light:#e8f3f0;
+  --line:#d8e0e6; --bg:#f6f8f9; --card:#ffffff; --warn:#8a5a1d; --warn-bg:#fdf6ea;
+  --prompt-bg:#132b25; --prompt-ink:#d7efe8;
+  --mono:'SF Mono',Menlo,Consolas,monospace;
+}
+body{ font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  color:var(--ink); background:var(--bg); overflow:hidden; height:100vh; user-select:none; }
+.slide{ display:none; width:100vw; height:100vh; padding:52px 80px 76px;
+  flex-direction:column; justify-content:center; position:relative; overflow:hidden; background:var(--bg); }
+.slide.active{ display:flex; animation:fadeUp .3s ease; }
+@keyframes fadeUp{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+.slide::before{ content:''; position:absolute; top:0; left:0; width:5px; height:100%;
+  background:linear-gradient(180deg,var(--accent) 0%,#3a8a76 60%,transparent 100%); }
+.slide-num{ position:absolute; bottom:24px; right:46px; font-size:12px; font-family:var(--mono); color:#9aa8b3; letter-spacing:2px; }
+h1{ font-size:46px; font-weight:800; line-height:1.3; }
+h2{ font-size:31px; font-weight:700; line-height:1.3; margin-bottom:20px; }
+h3{ font-size:18px; font-weight:700; line-height:1.4; }
+p{ line-height:1.75; }
+.accent{ color:var(--accent); }
+.label{ display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:700;
+  letter-spacing:2px; font-family:var(--mono); color:var(--accent); margin-bottom:12px; }
+.label::before{ content:'❯'; font-weight:800; }
+.pill{ display:inline-block; background:var(--accent); color:#fff; font-size:13px; font-weight:700;
+  font-family:var(--mono); letter-spacing:1px; padding:6px 16px; border-radius:20px; margin-bottom:18px; align-self:flex-start; }
+.tag{ display:inline-block; background:var(--accent-light); border:1px solid var(--accent);
+  color:var(--accent-dk); padding:5px 14px; border-radius:20px; font-size:13px; margin:4px 4px 0 0; }
+.card{ background:var(--card); border:1px solid var(--line); border-left:4px solid var(--accent);
+  border-radius:10px; padding:18px 22px; box-shadow:0 1px 3px rgba(26,39,51,.05); }
+.card h3{ color:var(--accent-dk); margin-bottom:6px; }
+.card p{ font-size:14px; color:var(--sub); }
+.g2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.g3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.hl{ background:var(--accent-light); border:1px solid var(--accent); border-radius:10px;
+  padding:14px 22px; font-size:16px; line-height:1.75; }
+.hl.center{ text-align:center; font-weight:700; }
+.checklist{ list-style:none; }
+.checklist li{ font-size:15.5px; padding:8px 0 8px 30px; border-bottom:1px solid var(--line); position:relative; line-height:1.6; }
+.checklist li:last-child{ border-bottom:none; }
+.checklist li::before{ content:'✓'; position:absolute; left:0; color:var(--accent); font-weight:800; }
+.prompt{ background:var(--prompt-bg); color:var(--prompt-ink); border-radius:12px;
+  padding:20px 26px; font-size:15.5px; line-height:1.9; margin:10px 0 14px; position:relative; }
+.prompt::before{ content:'💬 そのまま話しかけてください（読み上げでもコピペでもOK）';
+  display:block; font-size:12px; letter-spacing:1px; font-family:var(--mono); color:#7fbfae; margin-bottom:10px; }
+.check{ background:var(--warn-bg); border:1px solid #e5cfa3; border-radius:10px; padding:12px 20px; font-size:14.5px; line-height:1.7; }
+.check b{ color:var(--warn); }
+.check::before{ content:'👀 できたかの確認 ― '; font-weight:700; color:var(--warn); }
+.step-badge{ display:inline-block; background:var(--accent); color:#fff; border-radius:8px;
+  font-size:16px; font-weight:800; font-family:var(--mono); padding:4px 14px; margin-right:12px; vertical-align:3px; }
+.tree{ background:#eef2f4; border:1px solid var(--line); border-radius:10px; padding:18px 24px;
+  font-family:var(--mono); font-size:14px; line-height:1.85; white-space:pre; }
+.tree .cm{ color:var(--accent); }
+.map{ display:flex; gap:10px; }
+.map .m{ flex:1; background:var(--card); border:1px solid var(--line); border-top:4px solid var(--accent);
+  border-radius:10px; padding:14px 12px; text-align:center; }
+.map .m .n{ font-family:var(--mono); font-weight:800; color:var(--accent); font-size:13px; }
+.map .m b{ display:block; font-size:14.5px; margin:6px 0 4px; }
+.map .m span{ font-size:11.5px; color:var(--sub); line-height:1.5; display:block; }
+.footer-line{ position:absolute; bottom:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg,var(--accent) 0%,#3a8a76 40%,transparent 80%); opacity:.7; }
+.nav{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px;
+  align-items:center; background:rgba(255,255,255,.94); border:1px solid var(--line); border-radius:50px;
+  padding:8px 18px; box-shadow:0 4px 16px rgba(26,39,51,.12); z-index:100; }
+.nav button{ background:var(--accent-light); border:1px solid var(--accent); color:var(--accent-dk);
+  width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px;
+  display:flex; align-items:center; justify-content:center; }
+.nav button:hover{ background:var(--accent); color:#fff; }
+.nav-cnt{ font-size:13px; font-family:var(--mono); color:var(--sub); min-width:56px; text-align:center; }
+@media print{
+  @page{ size:1920px 1080px; margin:0; }
+  *,*::before,*::after{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  html,body{ width:1920px; overflow:visible; height:auto; }
+  .nav{ display:none !important; }
+  .slide{ display:flex !important; width:1920px !important; height:1080px !important;
+    padding:76px 116px 104px !important; page-break-after:always; animation:none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- 1 表紙 -->
+<div class="slide active">
+  <div class="pill">ハンズオン ― 第2回 ／ 2026年8月24日</div>
+  <h1>「理事長AI」構想を、<br><span class="accent">動く組織</span>にする</h1>
+  <p style="font-size:18px; color:var(--sub); margin-top:18px;">
+    前半で、メールでお伝えした設計を振り返ります。<br>
+    後半は理事長のClaudeを実際に動かし、最初の1部署「加算戦略部」を今日この場で立ち上げます。
+  </p>
+  <div style="margin-top:26px;">
+    <span class="tag">振り返り 約15分 ＋ ハンズオン 約60分</span>
+    <span class="tag">操作：北島理事長</span>
+    <span class="tag">伴走：一松</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">01</div>
+</div>
+
+<!-- AGENDA 本日の流れ -->
+<div class="slide">
+  <div class="label">AGENDA</div>
+  <h2>本日の流れ</h2>
+  <ul class="checklist" style="font-size:18px;">
+    <li><b>振り返り</b> ― メールでお伝えした、構想への評価と動かすための要点3つ</li>
+    <li><b>ナレッジと成長サイクル</b> ― 1.5か月の実践を組織の資産にする考え方</li>
+    <li><b>ロードマップ</b> ― 毎月のお伺いで1部署ずつ立ち上げる道筋</li>
+    <li><b>ハンズオン</b> ― 理事長のClaudeを動かして、加算戦略部をSTEP1〜7で作り切る</li>
+    <li><b>実物の確認</b> ― 役割定義書と最初の成果物が稟議箱に届くところまで</li>
+  </ul>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- R1 振り返り：結論 -->
+<div class="slide">
+  <div class="label">REVIEW 1/4 ― メールでお伝えしたことの振り返り</div>
+  <h2>結論：構想の骨格は、<span class="accent">変える必要がありません</span></h2>
+  <div class="g3" style="margin-bottom:20px;">
+    <div class="card"><h3>編成</h3><p>戦略本部（理事長直轄）を頂点に、5室＋本部直属2機能。部署の重さで増減できる設計。</p></div>
+    <div class="card"><h3>攻守の分離</h3><p>「加算」を攻め（戦略室）と守り（コンプライアンス室）で分担。収益と順守を両立する要。</p></div>
+    <div class="card"><h3>統制ライン</h3><p>成果物 → 検算役 → 内部監査室 → 理事長。AI経営組織に必須の3段構え。</p></div>
+  </div>
+  <div class="hl center">いずれもAIによる経営組織の設計として理にかなっており、<br>このまま実装に進められる完成度です。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- R2 振り返り：要点3つ -->
+<div class="slide">
+  <div class="label">REVIEW 2/4 ― 動かすための要点3つ</div>
+  <h2>本日この<span class="accent">3つ</span>を、実際にやります</h2>
+  <div class="g3" style="margin-bottom:20px;">
+    <div class="card"><h3>①役割定義書1枚</h3><p>AI社員1人＝部署フォルダ1つ＋定義書1枚。書くのは役割・扱ってよい情報・成果物の型・禁止事項の<b>4項目だけ</b>。</p></div>
+    <div class="card"><h3>②1室ずつ立ち上げる</h3><p>先発は「加算の攻守ペア」＋外部環境分析部。効果が金額で見え、返還リスクに直結し、番人箱に触れにくい。</p></div>
+    <div class="card"><h3>③検算役は別の目</h3><p>作ったAIと<b>別のセッション</b>で点検。外に出る成果物は必ず理事長の稟議承認。承認前の自動実行は憲法で禁止。</p></div>
+  </div>
+  <div class="hl center">今日はこの3つを「聞く」のではなく、<b>ご自身の手で動かして</b>確認いただきます。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- R3 振り返り：ナレッジと成長サイクル -->
+<div class="slide">
+  <div class="label">REVIEW 3/4 ― ナレッジと成長サイクル</div>
+  <h2>1.5か月の実践が<span class="accent">出発点</span>、組織は「使うほど育つ」</h2>
+  <div class="g2" style="margin-bottom:18px;">
+    <div class="card"><h3>判断軸18件 → 憲法へ</h3><p>失敗から昇格させたルールを全部署共通の憲法に収録。初日から「18回分の学び」を備えた組織に。</p></div>
+    <div class="card"><h3>制作物791ファイル → 成果物の型へ</h3><p>型になった制作物を各部署の「成果物の型」として継承。ゼロからではなく、動いている型を広げる。</p></div>
+  </div>
+  <div class="map" style="margin-bottom:14px;">
+    <div class="m"><b>日々の運用</b><span>各部署が成果物を起案<br>失敗・つまずきも記録</span></div>
+    <div class="m"><b>ナレッジに昇格</b><span>成果物は「型」へ<br>失敗は「ルール」へ</span></div>
+    <div class="m"><b>部署（AI社員）を増設</b><span>ナレッジが厚くなった<br>領域から新部署を立ち上げ</span></div>
+  </div>
+  <div class="hl center">このサイクルを毎月まわし、ナレッジの追加と部署の増設で組織を広げていきます。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- R4 振り返り：ロードマップ -->
+<div class="slide">
+  <div class="label">REVIEW 4/4 ― 毎月のお伺いで1部署ずつ</div>
+  <h2>立ち上げの<span class="accent">道筋</span>（目安）</h2>
+  <table style="width:100%; border-collapse:collapse; font-size:15px; margin-bottom:16px;">
+    <tr><th style="background:var(--accent-light); text-align:left; padding:10px 16px; border:1px solid var(--line);">お伺い日</th>
+        <th style="background:var(--accent-light); text-align:left; padding:10px 16px; border:1px solid var(--line);">立ち上げる部署</th>
+        <th style="background:var(--accent-light); text-align:left; padding:10px 16px; border:1px solid var(--line);">段階</th></tr>
+    <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);"><b>8/24（本日）</b></td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);"><b>加算戦略部</b> ― これから一緒に作ります</td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);" rowspan="3">第1段階<br>加算の攻守ペア＋分析</td></tr>
+    <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">9/29</td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">加算要件管理部 ― 守りの点検表</td></tr>
+    <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">10/26</td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">外部環境分析部 ― 制度動向の週報</td></tr>
+    <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">11/27</td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">内部監査室 ― 週次監査・理事長直結報告</td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">第2段階 統制ラインの本稼働</td></tr>
+    <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">12月以降</td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">経営戦略部・財源開発部 → ブランディング室 → リスク管理室 → 人財室</td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">第3段階 1室ずつ展開</td></tr>
+  </table>
+  <p style="color:var(--sub); font-size:14px;">※ 第0段階（憲法・番人箱・符号化の線引き）は、1.5か月の実践と法人版マニュアルで<b style="color:var(--accent);">大部分が完了済み</b>。ここまでが振り返りです。<b>ここからは、手を動かします。</b></p>
+  <div class="footer-line"></div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- 2 ゴール -->
+<div class="slide">
+  <div class="label">GOAL ― 今日のゴール</div>
+  <h2>終わったとき、<span class="accent">この形</span>ができています</h2>
+  <div class="g2" style="align-items:center;">
+    <div class="tree">furusato-ai/
+├── CLAUDE.md               <span class="cm">← 憲法（STEP2で作成）</span>
+├── 00_稟議箱/              <span class="cm">← 最初の成果物が届く（STEP5）</span>
+├── 10_戦略室/
+│   └── 加算戦略部/
+│       └── CLAUDE.md      <span class="cm">← 役割定義書（STEP3）</span>
+├── 90_内部監査室/          <span class="cm">← 今日は器だけ</span>
+├── 98_ナレッジ/            <span class="cm">← 1.5か月の実践を格納（STEP4）</span>
+└── 99_記録/                <span class="cm">← 作業記録</span></div>
+    <ul class="checklist">
+      <li>組織のフォルダと<b>憲法</b>ができている</li>
+      <li>加算戦略部が<b>役割定義書</b>を持っている</li>
+      <li>加算戦略部が<b>最初の仕事</b>を納品している</li>
+      <li>検算役の点検を通り、<b>稟議箱</b>に届いている</li>
+      <li>理事長が<b>承認</b>して、1周まわった状態</li>
+    </ul>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- 3 事前確認 -->
+<div class="slide">
+  <div class="label">READY ― はじめる前の確認（3つだけ）</div>
+  <h2>いつもの環境で、<span class="accent">そのまま</span>始められます</h2>
+  <div class="g3" style="margin-bottom:20px;">
+    <div class="card"><h3>① Claudeが起動している</h3><p>普段お使いのワークスペース（Claude Work）でClaude Codeを開いておきます。</p></div>
+    <div class="card"><h3>② 置き場所を決める</h3><p>furusato-aiフォルダは、ワークスペースの直下に新設します（番地方式はそのまま活きます）。</p></div>
+    <div class="card"><h3>③ 番人箱は外のまま</h3><p>要配慮情報・人事給与・符号台帳は今日も一切持ち込みません。扱うのは公開情報だけです。</p></div>
+  </div>
+  <div class="hl">迷ったら、いつもの合言葉<b>「スタート」</b>から。今日の作業はすべて、普段の使い方の延長です。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- 4 手順マップ -->
+<div class="slide">
+  <div class="label">MAP ― 今日の7ステップ</div>
+  <h2>この順番で、<span class="accent">1周</span>まわします</h2>
+  <div class="map" style="margin-bottom:18px;">
+    <div class="m"><div class="n">STEP1</div><b>器をつくる</b><span>フォルダ一式<br>約5分</span></div>
+    <div class="m"><div class="n">STEP2</div><b>憲法</b><span>3原則を固定<br>約10分</span></div>
+    <div class="m"><div class="n">STEP3</div><b>役割定義書</b><span>加算戦略部誕生<br>約10分</span></div>
+    <div class="m"><div class="n">STEP4</div><b>ナレッジ</b><span>1.5か月を継承<br>約10分</span></div>
+    <div class="m"><div class="n">STEP5</div><b>初仕事</b><span>試算表を起案<br>約15分</span></div>
+    <div class="m"><div class="n">STEP6</div><b>検算</b><span>別の目で点検<br>約5分</span></div>
+    <div class="m"><div class="n">STEP7</div><b>稟議</b><span>理事長が承認<br>約5分</span></div>
+  </div>
+  <div class="hl center">STEP5〜7が、これから毎週まわす「日常の1周」です。<br>今日その1周目を、ご一緒に回しきります。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- 5 STEP1 -->
+<div class="slide">
+  <div class="label">STEP 1 ／ 約5分</div>
+  <h2><span class="step-badge">STEP1</span>組織の<span class="accent">器</span>をつくる</h2>
+  <div class="prompt">スタート。今日から「理事長AI」の組織づくりを始めます。<br>
+このワークスペースに <b>furusato-ai</b> というフォルダを作り、その中に次の空フォルダを作ってください。<br>
+<b>00_稟議箱／10_戦略室の中に加算戦略部／90_内部監査室／98_ナレッジ／99_記録</b>。<br>
+まだ中身のファイルは作らないでください。作り終えたら、フォルダの一覧を見せてください。</div>
+  <div class="check">一覧に5つのフォルダが表示されればOK。<b>場所がワークスペースの外</b>だったら「furusato-aiをこのワークスペースの直下に移動してください」と伝えます。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- 6 STEP2 -->
+<div class="slide">
+  <div class="label">STEP 2 ／ 約10分</div>
+  <h2><span class="step-badge">STEP2</span><span class="accent">憲法</span>（CLAUDE.md）を書く</h2>
+  <div class="prompt">furusato-aiの直下に、この組織の憲法として CLAUDE.md を作ってください。柱は次の3原則です。<br>
+<b>原則1：番人箱は渡さない。</b>利用者の要配慮情報・職員の人事給与・符号台帳は扱わない。扱うのは公開情報と符号化済みデータだけ。<br>
+<b>原則2：設計は全体、着手は1室ずつ。</b><br>
+<b>原則3：AIは起案まで、決裁は人。</b>送信・公表・提出・契約は、必ず本文を理事長に見せて承認を得る。承認前の自動実行は禁止。<br>
+あわせて「完成した成果物は00_稟議箱に置く」「作業記録は99_記録に残す」も明記してください。書けたら全文を見せてください。</div>
+  <div class="check">3原則と稟議箱・記録のルールが全文に入っているか、<b>理事長が読んで違和感がないか</b>。直したい言い回しは、その場で「ここをこう直して」でOK。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">10</div>
+</div>
+
+<!-- 7 STEP3 -->
+<div class="slide">
+  <div class="label">STEP 3 ／ 約10分 ― ここでAI社員が誕生します</div>
+  <h2><span class="step-badge">STEP3</span>加算戦略部の<span class="accent">役割定義書</span>を書く</h2>
+  <div class="prompt">10_戦略室／加算戦略部 の中に、この部署の役割定義書として CLAUDE.md を作ってください。次の4項目だけで書いてください。<br>
+<b>役割：</b>加算を「収益」と「アウトカム」の両立で設計する<br>
+<b>扱ってよい情報：</b>厚労省・自治体の一次情報、符号化済みの算定実績<br>
+<b>成果物の型：</b>加算シナリオ試算表（根拠の出典URL必須）<br>
+<b>禁止事項：</b>番人箱・符号台帳に触れない。加算要件を断定せず、必ず一次情報の照合を促す<br>
+書けたら全文を見せてください。</div>
+  <div class="check">4項目が短く明確に書かれているか。<b>長い定義書は事故のもと</b>――1画面に収まる分量が目安です。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">11</div>
+</div>
+
+<!-- 8 STEP4 -->
+<div class="slide">
+  <div class="label">STEP 4 ／ 約10分</div>
+  <h2><span class="step-badge">STEP4</span>1.5か月の実践を<span class="accent">ナレッジ</span>として渡す</h2>
+  <p style="margin-bottom:10px;">まず、Finderで「AI活用_1.5か月の歩みと成果」のPDFを <b>98_ナレッジ</b> にコピーします。そのうえで――</p>
+  <div class="prompt">98_ナレッジに入れた「AI活用_1.5か月の歩みと成果」を読んでください。<br>
+この中の<b>「失敗を毎回踏まえるルールに変えてきた」の一覧（判断軸）</b>を、98_ナレッジ／判断軸.md としてMarkdownの一覧に書き起こしてください。<br>
+書き終えたら、憲法（furusato-ai/CLAUDE.md)に「判断は98_ナレッジ/判断軸.mdを踏まえること」と1行追記してください。</div>
+  <div class="check">判断軸.mdができて、憲法に参照の1行が追記されていればOK。これで新しい部署は<b>初日から「18回分の学び」を持って</b>働きます。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">12</div>
+</div>
+
+<!-- 9 STEP5 -->
+<div class="slide">
+  <div class="label">STEP 5 ／ 約15分 ― いよいよ初仕事</div>
+  <h2><span class="step-badge">STEP5</span>加算戦略部に<span class="accent">最初の仕事</span>を頼む</h2>
+  <div class="prompt">あなたは加算戦略部です。まず 10_戦略室／加算戦略部／CLAUDE.md と憲法を読んでから、最初の仕事をお願いします。<br>
+当法人（特養・ショートステイ・居宅介護支援・グループホーム・小規模多機能）で、<b>来年度に向けて検討価値の高い加算を3つ</b>挙げ、それぞれ「概要／想定収益の考え方／必要な体制／出典URL」の4点で<b>加算シナリオ試算表の下書き</b>を作ってください。<br>
+数字は仮置きで構いませんが、要件には必ず厚労省・自治体の出典URLを付けてください。完成したら00_稟議箱に置いてください。</div>
+  <div class="check">00_稟議箱にファイルが置かれ、<b>3つの加算すべてに出典URL</b>が付いているか。URLのないものは次のSTEP6で必ず引っかかります。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">13</div>
+</div>
+
+<!-- 10 STEP6 -->
+<div class="slide">
+  <div class="label">STEP 6 ／ 約5分 ― ここが統制ラインの肝</div>
+  <h2><span class="step-badge">STEP6</span><span class="accent">別の目</span>で検算する</h2>
+  <p style="margin-bottom:10px;"><b>いったん今の会話を離れ、新しい会話（別セッション）を開きます。</b>作った本人に点検させないためです。</p>
+  <div class="prompt">あなたは検算役です。00_稟議箱にある加算シナリオ試算表を点検してください。点検項目は3つです。<br>
+① 出典は一次情報（厚労省・自治体）か<br>
+② 番人箱（要配慮情報・人事給与・符号台帳）に触れていないか<br>
+③ 数字に計算根拠が書かれているか<br>
+問題があれば箇条書きで指摘してください。なければ試算表の末尾に「検算済み」と追記してください。</div>
+  <div class="check">指摘が出たら、元の会話に戻して「検算役の指摘を直してください」。<b>指摘ゼロで通ることより、指摘が出て直ることが正常</b>です。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">14</div>
+</div>
+
+<!-- 11 STEP7 -->
+<div class="slide">
+  <div class="label">STEP 7 ／ 約5分 ― 決裁は人</div>
+  <h2><span class="step-badge">STEP7</span>理事長が<span class="accent">稟議</span>する</h2>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="card"><h3>承認するとき</h3><p>試算表の本文をご自身の目で読み、良ければ――<br><br>「<b>承認します。99_記録に本日の作業記録を残してください</b>」</p></div>
+    <div class="card"><h3>差し戻すとき</h3><p>気になる点があれば――<br><br>「<b>差し戻します。◯◯の根拠を一次情報で確認して、直してください</b>」</p></div>
+  </div>
+  <div class="hl center">これで1周完成です。<br><b>起案（部署）→ 検算（別の目）→ 監査 → 稟議（理事長）</b>――構想の統制ラインが、いま実際に動きました。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">15</div>
+</div>
+
+<!-- 12 つまずき -->
+<div class="slide">
+  <div class="label">TROUBLE ― つまずいたら（よくある3つ）</div>
+  <h2>止まらずに<span class="accent">戻せる</span>言葉</h2>
+  <table style="font-size:15px;">
+    <tr><th style="background:var(--accent-light); text-align:left; padding:10px 16px; border:1px solid var(--line);">起きたこと</th>
+        <th style="background:var(--accent-light); text-align:left; padding:10px 16px; border:1px solid var(--line);">話しかける言葉</th></tr>
+    <tr><td style="padding:12px 16px; border:1px solid var(--line); background:var(--card);">違う場所にフォルダやファイルを作った</td>
+        <td style="padding:12px 16px; border:1px solid var(--line); background:var(--card);">「それは furusato-ai の◯◯に移動してください」</td></tr>
+    <tr><td style="padding:12px 16px; border:1px solid var(--line); background:var(--card);">加算の要件を断定してきた（出典がない）</td>
+        <td style="padding:12px 16px; border:1px solid var(--line); background:var(--card);">「役割定義書の禁止事項を読み直して、出典URLを付けてください」</td></tr>
+    <tr><td style="padding:12px 16px; border:1px solid var(--line); background:var(--card);">会話が長くなって動きが鈍い</td>
+        <td style="padding:12px 16px; border:1px solid var(--line); background:var(--card);">「ここまでを99_記録に保存してください」→ 新しい会話で「スタート」</td></tr>
+  </table>
+  <p style="margin-top:16px; color:var(--sub);">直すのはAIではなく<b>定義書と憲法</b>。同じつまずきが2回起きたら、それはルールに昇格させるサイン（判断軸19件目）です。</p>
+  <div class="footer-line"></div>
+  <div class="slide-num">16</div>
+</div>
+
+<!-- 13 宿題 -->
+<div class="slide">
+  <div class="label">HOMEWORK ― 次回（9/29）まで</div>
+  <h2>週1回、今日の<span class="accent">1周</span>をまわす</h2>
+  <div class="g3" style="margin-bottom:18px;">
+    <div class="card"><h3>毎週1テーマ</h3><p>加算戦略部に仕事を1つ頼む（STEP5の言い方で。テーマは気になる加算なんでもOK）。</p></div>
+    <div class="card"><h3>検算→稟議まで</h3><p>別セッションの検算（STEP6）→稟議箱で承認（STEP7）まで、必ず通します。目安30分。</p></div>
+    <div class="card"><h3>つまずきはメモ</h3><p>うまくいかなかった点は判断軸.mdに追記。次回の改善材料になります。</p></div>
+  </div>
+  <div class="hl"><b>次回 9/29：</b>守り側の「加算要件管理部」を、今日と同じ手順で立ち上げます。攻め（試算）と守り（要件点検）のペアが揃い、加算の攻守が完成します。</div>
+  <div class="footer-line"></div>
+  <div class="slide-num">17</div>
+</div>
+
+<!-- 14 締め -->
+<div class="slide">
+  <div class="label">CLOSING</div>
+  <h2>今日、組織の<span class="accent">1人目</span>が働き始めました</h2>
+  <p style="font-size:17px; margin-bottom:20px;">
+    フォルダと定義書1枚で部署が増やせることを、ご自身の手で確認いただきました。<br>
+    ここから毎月1部署ずつ、「使うほど育つ」組織にしていきます。
+  </p>
+  <div class="hl center" style="font-size:19px;">
+    「守りは失点を防ぎ、攻めで2040年を越える」<br>
+    <span style="font-size:15px; font-weight:400; color:var(--sub);">その第一歩が、今日の加算戦略部です。</span>
+  </div>
+  <div class="footer-line"></div>
+  <div class="slide-num">18</div>
+</div>
+
+<div class="nav">
+  <button onclick="mv(-1)">‹</button>
+  <span class="nav-cnt" id="cnt">1 / 14</span>
+  <button onclick="mv(1)">›</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+slides.forEach((s, i) => {
+  const n = s.querySelector('.slide-num');
+  if (n) n.textContent = String(i + 1).padStart(2, '0');
+});
+let cur = 0;
+document.getElementById('cnt').textContent = '1 / ' + slides.length;
+function show(i){
+  slides[cur].classList.remove('active');
+  cur = (i + slides.length) % slides.length;
+  slides[cur].classList.add('active');
+  document.getElementById('cnt').textContent = (cur+1) + ' / ' + slides.length;
+}
+function mv(d){ show(cur + d); }
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === ' ') mv(1);
+  if(e.key === 'ArrowLeft') mv(-1);
+});
+</script>
+</body>
+</html>
