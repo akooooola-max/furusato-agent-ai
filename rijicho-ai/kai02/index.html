@@ -92,7 +92,8 @@ p{ line-height:1.75; }
   <h1>「理事長AI」構想を、<br><span class="accent">動く組織</span>にする</h1>
   <p style="font-size:18px; color:var(--sub); margin-top:18px;">
     前半で、メールでお伝えした設計を振り返ります。<br>
-    後半は理事長のClaudeを実際に動かし、最初の1部署「加算戦略部」を今日この場で立ち上げます。
+    後半は理事長のClaudeを実際に動かし、最初の1部署「加算戦略部」を<b>試作</b>します。<br>
+    本日は本番運用の開始ではなく、<b>型が実務に合うかをサンプルで検証する回</b>です。
   </p>
   <div style="margin-top:26px;">
     <span class="tag">振り返り 約15分 ＋ ハンズオン 約60分</span>
@@ -111,8 +112,8 @@ p{ line-height:1.75; }
     <li><b>振り返り</b> ― メールでお伝えした、構想への評価と動かすための要点3つ</li>
     <li><b>ナレッジと成長サイクル</b> ― 1.5か月の実践を組織の資産にする考え方</li>
     <li><b>ロードマップ</b> ― 毎月のお伺いで1部署ずつ立ち上げる道筋</li>
-    <li><b>ハンズオン</b> ― 理事長のClaudeを動かして、加算戦略部をSTEP1〜7で作り切る</li>
-    <li><b>実物の確認</b> ― 役割定義書と最初の成果物が稟議箱に届くところまで</li>
+    <li><b>ハンズオン</b> ― 理事長のClaudeを動かして、加算戦略部をSTEP1〜7で試作する</li>
+    <li><b>サンプル検証</b> ― 役割定義書と検算の型が、実務で使えるかを確かめる</li>
   </ul>
   <div class="footer-line"></div>
   <div class="slide-num">02</div>
@@ -137,9 +138,9 @@ p{ line-height:1.75; }
   <div class="label">REVIEW 2/4 ― 動かすための要点3つ</div>
   <h2>本日この<span class="accent">3つ</span>を、実際にやります</h2>
   <div class="g3" style="margin-bottom:20px;">
-    <div class="card"><h3>①役割定義書1枚</h3><p>AI社員1人＝部署フォルダ1つ＋定義書1枚。書くのは役割・扱ってよい情報・成果物の型・禁止事項の<b>4項目だけ</b>。</p></div>
-    <div class="card"><h3>②1室ずつ立ち上げる</h3><p>先発は「加算の攻守ペア」＋外部環境分析部。効果が金額で見え、返還リスクに直結し、番人箱に触れにくい。</p></div>
-    <div class="card"><h3>③検算役は別の目</h3><p>作ったAIと<b>別のセッション</b>で点検。外に出る成果物は必ず理事長の稟議承認。承認前の自動実行は憲法で禁止。</p></div>
+    <div class="card"><h3>①役割定義書は9項目</h3><p>役割・<b>人間側の責任者</b>・根拠資料・成果物の型・検証承認・<b>ログ／版管理</b>・評価指標・報告先・禁止事項。AIの成果物に必ず人間の持ち主を置く。</p></div>
+    <div class="card"><h3>②1室ずつ立ち上げる</h3><p>順序は<b>①加算戦略部 → ②加算要件管理部 → ③外部環境分析部</b>。効果が金額で見え、返還リスクに直結し、番人箱に触れにくい。</p></div>
+    <div class="card"><h3>③別の目＋人間の最終確認</h3><p>別セッションで一次資料・適用日・根拠を点検。そのうえで<b>人間の責任者が一次資料と突き合わせて最終確認</b>してから稟議へ。</p></div>
   </div>
   <div class="hl center">今日はこの3つを「聞く」のではなく、<b>ご自身の手で動かして</b>確認いただきます。</div>
   <div class="footer-line"></div>
@@ -148,18 +149,16 @@ p{ line-height:1.75; }
 
 <!-- R3 振り返り：ナレッジと成長サイクル -->
 <div class="slide">
-  <div class="label">REVIEW 3/4 ― ナレッジと成長サイクル</div>
-  <h2>1.5か月の実践が<span class="accent">出発点</span>、組織は「使うほど育つ」</h2>
-  <div class="g2" style="margin-bottom:18px;">
-    <div class="card"><h3>判断軸18件 → 憲法へ</h3><p>失敗から昇格させたルールを全部署共通の憲法に収録。初日から「18回分の学び」を備えた組織に。</p></div>
-    <div class="card"><h3>制作物791ファイル → 成果物の型へ</h3><p>型になった制作物を各部署の「成果物の型」として継承。ゼロからではなく、動いている型を広げる。</p></div>
+  <div class="label">REVIEW 3/4 ― ナレッジの積み上げ方</div>
+  <h2>1.5か月の実践を、<span class="accent">承認を通して</span>基盤にする</h2>
+  <p style="margin-bottom:14px;">判断軸18件・791ファイルは大きな資産です。ただし<b>自動でナレッジ化はしません。</b>AIの生成物には誤りや古い情報が混じり得るため、そのまま入れると誤りが組織全体に配られます。次の4段階を必ず通します。</p>
+  <div class="map" style="margin-bottom:16px;">
+    <div class="m"><div class="n">①</div><b>選別</b><span>全部ではなく<br>「型になったもの」だけ抜き出す</span></div>
+    <div class="m"><div class="n">②</div><b>承認</b><span>一次資料と突き合わせ<br>人間の責任者が承認</span></div>
+    <div class="m"><div class="n">③</div><b>版管理</b><span>承認日・出典・適用日・承認者<br>を記録しv1・v2…</span></div>
+    <div class="m"><div class="n">④</div><b>廃止管理</b><span>古くなったものは削除せず<br>「廃止」として日付付きで分離</span></div>
   </div>
-  <div class="map" style="margin-bottom:14px;">
-    <div class="m"><b>日々の運用</b><span>各部署が成果物を起案<br>失敗・つまずきも記録</span></div>
-    <div class="m"><b>ナレッジに昇格</b><span>成果物は「型」へ<br>失敗は「ルール」へ</span></div>
-    <div class="m"><b>部署（AI社員）を増設</b><span>ナレッジが厚くなった<br>領域から新部署を立ち上げ</span></div>
-  </div>
-  <div class="hl center">このサイクルを毎月まわし、ナレッジの追加と部署の増設で組織を広げていきます。</div>
+  <div class="hl center">組織は「使うほどAIが勝手に賢くなる」のではありません。<br><b>承認済みナレッジ基盤が、人間の承認を通って一段ずつ厚くなっていきます。</b></div>
   <div class="footer-line"></div>
   <div class="slide-num">04</div>
 </div>
@@ -173,12 +172,12 @@ p{ line-height:1.75; }
         <th style="background:var(--accent-light); text-align:left; padding:10px 16px; border:1px solid var(--line);">立ち上げる部署</th>
         <th style="background:var(--accent-light); text-align:left; padding:10px 16px; border:1px solid var(--line);">段階</th></tr>
     <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);"><b>8/24（本日）</b></td>
-        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);"><b>加算戦略部</b> ― これから一緒に作ります</td>
-        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);" rowspan="3">第1段階<br>加算の攻守ペア＋分析</td></tr>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);"><b>①加算戦略部</b> ― <b>試作とサンプル検証</b>（本番運用の開始ではありません）</td>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);" rowspan="3">第1段階<br>試作と<br>サンプル検証</td></tr>
     <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">9/29</td>
-        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">加算要件管理部 ― 守りの点検表</td></tr>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);"><b>②加算要件管理部</b> ― 守りの点検表を試作</td></tr>
     <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">10/26</td>
-        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">外部環境分析部 ― 制度動向の週報</td></tr>
+        <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);"><b>③外部環境分析部</b> ― 制度動向の週報を試作</td></tr>
     <tr><td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">11/27</td>
         <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">内部監査室 ― 週次監査・理事長直結報告</td>
         <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">第2段階 統制ラインの本稼働</td></tr>
@@ -186,7 +185,7 @@ p{ line-height:1.75; }
         <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">経営戦略部・財源開発部 → ブランディング室 → リスク管理室 → 人財室</td>
         <td style="padding:10px 16px; border:1px solid var(--line); background:var(--card);">第3段階 1室ずつ展開</td></tr>
   </table>
-  <p style="color:var(--sub); font-size:14px;">※ 第0段階（憲法・番人箱・符号化の線引き）は、1.5か月の実践と法人版マニュアルで<b style="color:var(--accent);">大部分が完了済み</b>。ここまでが振り返りです。<b>ここからは、手を動かします。</b></p>
+  <p style="color:var(--sub); font-size:14px;">※ 第0段階（憲法・番人箱・符号化の線引き）は1.5か月の実践と法人版マニュアルで<b style="color:var(--accent);">大部分が完了済み</b>。残るは符号台帳の本番移行と<b>AIサービス条件の6点確認</b>です。<br>※ 立ち上げ順序は<b>①加算戦略部 → ②加算要件管理部 → ③外部環境分析部</b>で、提案書・ご連絡と統一しています。<b>ここからは、手を動かします。</b></p>
   <div class="footer-line"></div>
   <div class="slide-num">05</div>
 </div>
@@ -194,7 +193,7 @@ p{ line-height:1.75; }
 <!-- 2 ゴール -->
 <div class="slide">
   <div class="label">GOAL ― 今日のゴール</div>
-  <h2>終わったとき、<span class="accent">この形</span>ができています</h2>
+  <h2>終わったとき、<span class="accent">この形の試作</span>ができています</h2>
   <div class="g2" style="align-items:center;">
     <div class="tree">furusato-ai/
 ├── CLAUDE.md               <span class="cm">← 憲法（STEP2で作成）</span>
@@ -209,8 +208,9 @@ p{ line-height:1.75; }
       <li>組織のフォルダと<b>憲法</b>ができている</li>
       <li>加算戦略部が<b>役割定義書</b>を持っている</li>
       <li>加算戦略部が<b>最初の仕事</b>を納品している</li>
-      <li>検算役の点検を通り、<b>稟議箱</b>に届いている</li>
+      <li>検算役の点検と<b>人間の最終確認</b>を通り、稟議箱に届いている</li>
       <li>理事長が<b>承認</b>して、1周まわった状態</li>
+      <li>※成果物は<b>サンプル</b>。実際の申請・届出には用いません</li>
     </ul>
   </div>
   <div class="footer-line"></div>
@@ -219,14 +219,17 @@ p{ line-height:1.75; }
 
 <!-- 3 事前確認 -->
 <div class="slide">
-  <div class="label">READY ― はじめる前の確認（3つだけ）</div>
-  <h2>いつもの環境で、<span class="accent">そのまま</span>始められます</h2>
-  <div class="g3" style="margin-bottom:20px;">
+  <div class="label">READY ― はじめる前の確認（4つ）</div>
+  <h2>環境と<span class="accent">サービス条件</span>を確かめてから始めます</h2>
+  <div class="g2" style="margin-bottom:14px;">
     <div class="card"><h3>① Claudeが起動している</h3><p>普段お使いのワークスペース（Claude Work）でClaude Codeを開いておきます。</p></div>
     <div class="card"><h3>② 置き場所を決める</h3><p>furusato-aiフォルダは、ワークスペースの直下に新設します（番地方式はそのまま活きます）。</p></div>
-    <div class="card"><h3>③ 番人箱は外のまま</h3><p>要配慮情報・人事給与・符号台帳は今日も一切持ち込みません。扱うのは公開情報だけです。</p></div>
   </div>
-  <div class="hl">迷ったら、いつもの合言葉<b>「スタート」</b>から。今日の作業はすべて、普段の使い方の延長です。</div>
+  <div class="g2" style="margin-bottom:14px;">
+    <div class="card"><h3>③ 番人箱は外のまま</h3><p>要配慮情報・人事給与・符号台帳は今日も一切持ち込みません。扱うのは公開情報だけです。</p></div>
+    <div class="card"><h3>④ サービス条件の6点確認</h3><p><b>契約形態／学習利用／保存期間／権限／ログ／削除方法</b>を法人として確認し、記録に残します。番人箱の線引きと合わせて、これが載せる前の前提です。</p></div>
+  </div>
+  <div class="hl">④は本日その場で全部埋める必要はありません。<b>「誰がいつまでに確認するか」を決めて記録に残す</b>ところまでを本日のゴールとします。</div>
   <div class="footer-line"></div>
   <div class="slide-num">07</div>
 </div>
@@ -239,9 +242,9 @@ p{ line-height:1.75; }
     <div class="m"><div class="n">STEP1</div><b>器をつくる</b><span>フォルダ一式<br>約5分</span></div>
     <div class="m"><div class="n">STEP2</div><b>憲法</b><span>3原則を固定<br>約10分</span></div>
     <div class="m"><div class="n">STEP3</div><b>役割定義書</b><span>加算戦略部誕生<br>約10分</span></div>
-    <div class="m"><div class="n">STEP4</div><b>ナレッジ</b><span>1.5か月を継承<br>約10分</span></div>
-    <div class="m"><div class="n">STEP5</div><b>初仕事</b><span>試算表を起案<br>約15分</span></div>
-    <div class="m"><div class="n">STEP6</div><b>検算</b><span>別の目で点検<br>約5分</span></div>
+    <div class="m"><div class="n">STEP4</div><b>ナレッジ</b><span>選別・承認して継承<br>約10分</span></div>
+    <div class="m"><div class="n">STEP5</div><b>サンプル起案</b><span>試算表を試作<br>約15分</span></div>
+    <div class="m"><div class="n">STEP6</div><b>検算＋人の確認</b><span>別の目で点検し<br>人が最終確認 約10分</span></div>
     <div class="m"><div class="n">STEP7</div><b>稟議</b><span>理事長が承認<br>約5分</span></div>
   </div>
   <div class="hl center">STEP5〜7が、これから毎週まわす「日常の1周」です。<br>今日その1周目を、ご一緒に回しきります。</div>
@@ -280,13 +283,18 @@ p{ line-height:1.75; }
 <div class="slide">
   <div class="label">STEP 3 ／ 約10分 ― ここでAI社員が誕生します</div>
   <h2><span class="step-badge">STEP3</span>加算戦略部の<span class="accent">役割定義書</span>を書く</h2>
-  <div class="prompt">10_戦略室／加算戦略部 の中に、この部署の役割定義書として CLAUDE.md を作ってください。次の4項目だけで書いてください。<br>
-<b>役割：</b>加算を「収益」と「アウトカム」の両立で設計する<br>
-<b>扱ってよい情報：</b>厚労省・自治体の一次情報、符号化済みの算定実績<br>
-<b>成果物の型：</b>加算シナリオ試算表（根拠の出典URL必須）<br>
-<b>禁止事項：</b>番人箱・符号台帳に触れない。加算要件を断定せず、必ず一次情報の照合を促す<br>
+  <div class="prompt" style="font-size:14.5px; line-height:1.8;">10_戦略室／加算戦略部 の中に、この部署の役割定義書として CLAUDE.md を作ってください。次の9項目で書いてください。<br>
+<b>①役割：</b>加算を「収益」と「アウトカム」の両立で設計する<br>
+<b>②人間側の責任者：</b>事務長（成果物の責任を負う人間）<br>
+<b>③扱ってよい情報・根拠資料：</b>厚労省・自治体の一次情報（URL・発出日・適用日を明記）、符号化済みの算定実績<br>
+<b>④成果物の型：</b>加算シナリオ試算表（出典URL／適用日／作成日／作成者の4欄を必須）<br>
+<b>⑤検証・承認：</b>検算役の点検 → 人間の責任者の最終確認 → 理事長の稟議承認<br>
+<b>⑥ログ・版管理：</b>作業ログは99_記録へ。成果物はv1・v2…と版を付け旧版も残す<br>
+<b>⑦評価指標：</b>算定漏れ0件／根拠URL添付率100％／要件変更の見落とし0件<br>
+<b>⑧報告先：</b>加算戦略部 → 事務長 → 戦略室 → 稟議箱（理事長）<br>
+<b>⑨禁止事項：</b>番人箱・符号台帳に触れない。加算要件を断定せず、必ず一次情報の照合を促す<br>
 書けたら全文を見せてください。</div>
-  <div class="check">4項目が短く明確に書かれているか。<b>長い定義書は事故のもと</b>――1画面に収まる分量が目安です。</div>
+  <div class="check">9項目が漏れなく、かつ簡潔に書かれているか。特に<b>②責任者と⑤検証・承認</b>が空欄でないこと――ここが埋まっていない定義書は稼働させません。</div>
   <div class="footer-line"></div>
   <div class="slide-num">11</div>
 </div>
@@ -294,12 +302,12 @@ p{ line-height:1.75; }
 <!-- 8 STEP4 -->
 <div class="slide">
   <div class="label">STEP 4 ／ 約10分</div>
-  <h2><span class="step-badge">STEP4</span>1.5か月の実践を<span class="accent">ナレッジ</span>として渡す</h2>
-  <p style="margin-bottom:10px;">まず、Finderで「AI活用_1.5か月の歩みと成果」のPDFを <b>98_ナレッジ</b> にコピーします。そのうえで――</p>
-  <div class="prompt">98_ナレッジに入れた「AI活用_1.5か月の歩みと成果」を読んでください。<br>
-この中の<b>「失敗を毎回踏まえるルールに変えてきた」の一覧（判断軸）</b>を、98_ナレッジ／判断軸.md としてMarkdownの一覧に書き起こしてください。<br>
-書き終えたら、憲法（furusato-ai/CLAUDE.md)に「判断は98_ナレッジ/判断軸.mdを踏まえること」と1行追記してください。</div>
-  <div class="check">判断軸.mdができて、憲法に参照の1行が追記されていればOK。これで新しい部署は<b>初日から「18回分の学び」を持って</b>働きます。</div>
+  <h2><span class="step-badge">STEP4</span>ナレッジは<span class="accent">選別・承認</span>してから渡す</h2>
+  <p style="margin-bottom:10px;">Finderで「AI活用_1.5か月の歩みと成果」のPDFを <b>98_ナレッジ/候補</b> にコピーします。<b>いきなり本採用にはしません。</b>そのうえで――</p>
+  <div class="prompt" style="font-size:15px;">98_ナレッジ/候補 に入れた「AI活用_1.5か月の歩みと成果」を読んでください。<br>
+この中の<b>判断軸の一覧</b>を、98_ナレッジ/候補/判断軸_候補.md として書き起こしてください。各項目には<b>「出典・記録日・承認欄（空欄）」</b>を付けてください。<br>
+書き終えたら一覧を画面に出してください。<b>私が1件ずつ確認して、承認したものだけを 98_ナレッジ/判断軸_v1.md に移します。</b>承認していない項目は憲法から参照しないでください。</div>
+  <div class="check">候補と承認済みが<b>別フォルダに分かれている</b>こと。理事長が承認した項目だけがv1に入り、憲法から参照されている状態が正解です。</div>
   <div class="footer-line"></div>
   <div class="slide-num">12</div>
 </div>
@@ -307,26 +315,27 @@ p{ line-height:1.75; }
 <!-- 9 STEP5 -->
 <div class="slide">
   <div class="label">STEP 5 ／ 約15分 ― いよいよ初仕事</div>
-  <h2><span class="step-badge">STEP5</span>加算戦略部に<span class="accent">最初の仕事</span>を頼む</h2>
-  <div class="prompt">あなたは加算戦略部です。まず 10_戦略室／加算戦略部／CLAUDE.md と憲法を読んでから、最初の仕事をお願いします。<br>
-当法人（特養・ショートステイ・居宅介護支援・グループホーム・小規模多機能）で、<b>来年度に向けて検討価値の高い加算を3つ</b>挙げ、それぞれ「概要／想定収益の考え方／必要な体制／出典URL」の4点で<b>加算シナリオ試算表の下書き</b>を作ってください。<br>
-数字は仮置きで構いませんが、要件には必ず厚労省・自治体の出典URLを付けてください。完成したら00_稟議箱に置いてください。</div>
-  <div class="check">00_稟議箱にファイルが置かれ、<b>3つの加算すべてに出典URL</b>が付いているか。URLのないものは次のSTEP6で必ず引っかかります。</div>
+  <h2><span class="step-badge">STEP5</span>加算戦略部に<span class="accent">サンプルの仕事</span>を頼む</h2>
+  <div class="prompt" style="font-size:15px;">あなたは加算戦略部です。まず 10_戦略室／加算戦略部／CLAUDE.md と憲法を読んでから、最初の仕事をお願いします。<br>
+当法人（特養・ショートステイ・居宅介護支援・グループホーム・小規模多機能）で、<b>来年度に向けて検討価値の高い加算を3つ</b>挙げ、<b>加算シナリオ試算表の下書き（サンプル）</b>を作ってください。各加算に「概要／想定収益の考え方／必要な体制」に加え、<b>出典URL・発出日・適用日</b>を必ず付けてください。<br>
+冒頭に「<b>本資料はサンプルであり、実際の申請・届出には使用しない</b>」と明記してください。要件は断定せず「一次情報での確認が必要」と添えてください。完成したら00_稟議箱に置いてください。</div>
+  <div class="check">00_稟議箱にファイルが置かれ、3つの加算すべてに<b>出典URL・発出日・適用日</b>が付いているか。冒頭のサンプル注記も確認します。</div>
   <div class="footer-line"></div>
   <div class="slide-num">13</div>
 </div>
 
 <!-- 10 STEP6 -->
 <div class="slide">
-  <div class="label">STEP 6 ／ 約5分 ― ここが統制ラインの肝</div>
-  <h2><span class="step-badge">STEP6</span><span class="accent">別の目</span>で検算する</h2>
-  <p style="margin-bottom:10px;"><b>いったん今の会話を離れ、新しい会話（別セッション）を開きます。</b>作った本人に点検させないためです。</p>
-  <div class="prompt">あなたは検算役です。00_稟議箱にある加算シナリオ試算表を点検してください。点検項目は3つです。<br>
-① 出典は一次情報（厚労省・自治体）か<br>
-② 番人箱（要配慮情報・人事給与・符号台帳）に触れていないか<br>
-③ 数字に計算根拠が書かれているか<br>
-問題があれば箇条書きで指摘してください。なければ試算表の末尾に「検算済み」と追記してください。</div>
-  <div class="check">指摘が出たら、元の会話に戻して「検算役の指摘を直してください」。<b>指摘ゼロで通ることより、指摘が出て直ることが正常</b>です。</div>
+  <div class="label">STEP 6 ／ 約10分 ― ここが統制ラインの肝</div>
+  <h2><span class="step-badge">STEP6</span><span class="accent">別の目</span>で検算し、<span class="accent">人が</span>最終確認する</h2>
+  <p style="margin-bottom:8px;"><b>いったん今の会話を離れ、新しい会話（別セッション）を開きます。</b>作った本人に点検させないためです。</p>
+  <div class="prompt" style="font-size:14.5px; line-height:1.8;">あなたは検算役です。00_稟議箱にある加算シナリオ試算表を点検してください。点検項目は5つです。<br>
+① <b>一次資料に当たっているか</b>（厚労省・自治体の原文か。要約サイトや記憶に頼っていないか）<br>
+② <b>適用日が明示されているか</b>（発出日と、いつから適用される要件かを区別しているか）<br>
+③ <b>根拠が示されているか</b>（数字の一つひとつに出典URLと計算根拠が付いているか）<br>
+④ 番人箱に触れていないか　⑤ 要件を断定していないか<br>
+問題があれば箇条書きで指摘してください。指摘がなければ末尾に「AI検算済み（人間未確認）」と追記してください。</div>
+  <div class="check"><b>ここで終わりではありません。</b>AI同士の点検を通った後、<b>人間の責任者（事務長）が一次資料と突き合わせて最終確認</b>し、「人間確認済／確認者名／確認日」を追記して初めて稟議に上げられます。</div>
   <div class="footer-line"></div>
   <div class="slide-num">14</div>
 </div>
@@ -339,7 +348,7 @@ p{ line-height:1.75; }
     <div class="card"><h3>承認するとき</h3><p>試算表の本文をご自身の目で読み、良ければ――<br><br>「<b>承認します。99_記録に本日の作業記録を残してください</b>」</p></div>
     <div class="card"><h3>差し戻すとき</h3><p>気になる点があれば――<br><br>「<b>差し戻します。◯◯の根拠を一次情報で確認して、直してください</b>」</p></div>
   </div>
-  <div class="hl center">これで1周完成です。<br><b>起案（部署）→ 検算（別の目）→ 監査 → 稟議（理事長）</b>――構想の統制ラインが、いま実際に動きました。</div>
+  <div class="hl center">これで1周完成です。<br><b>起案（部署）→ AI検算（別の目）→ 人間の最終確認 → 稟議（理事長）</b><br>――構想の統制ラインが、いま実際に動きました。</div>
   <div class="footer-line"></div>
   <div class="slide-num">15</div>
 </div>
@@ -366,13 +375,13 @@ p{ line-height:1.75; }
 <!-- 13 宿題 -->
 <div class="slide">
   <div class="label">HOMEWORK ― 次回（9/29）まで</div>
-  <h2>週1回、今日の<span class="accent">1周</span>をまわす</h2>
-  <div class="g3" style="margin-bottom:18px;">
-    <div class="card"><h3>毎週1テーマ</h3><p>加算戦略部に仕事を1つ頼む（STEP5の言い方で。テーマは気になる加算なんでもOK）。</p></div>
-    <div class="card"><h3>検算→稟議まで</h3><p>別セッションの検算（STEP6）→稟議箱で承認（STEP7）まで、必ず通します。目安30分。</p></div>
-    <div class="card"><h3>つまずきはメモ</h3><p>うまくいかなかった点は判断軸.mdに追記。次回の改善材料になります。</p></div>
+  <h2>週1回、今日の<span class="accent">1周</span>をサンプルで回す</h2>
+  <div class="g3" style="margin-bottom:16px;">
+    <div class="card"><h3>毎週1テーマ（サンプル）</h3><p>加算戦略部に仕事を1つ頼む。<b>成果物はサンプル扱い</b>とし、実際の申請・届出には使いません。</p></div>
+    <div class="card"><h3>検算→人の確認→稟議</h3><p>別セッションの検算（STEP6・5項目）→ 事務長の最終確認 → 稟議箱で承認（STEP7）まで必ず通します。</p></div>
+    <div class="card"><h3>3つの検証を記録</h3><p>①定義書9項目が実務に合うか ②検算が誤りを拾えたか ③型が後から検証できるか。気づきを候補フォルダへ。</p></div>
   </div>
-  <div class="hl"><b>次回 9/29：</b>守り側の「加算要件管理部」を、今日と同じ手順で立ち上げます。攻め（試算）と守り（要件点検）のペアが揃い、加算の攻守が完成します。</div>
+  <div class="hl"><b>次回 9/29：</b>本日の検証結果をもとに加算戦略部の役割定義書を修正し、続いて<b>②加算要件管理部</b>を同じ手順で試作します。本番運用に上げるかどうかは、検証結果を見て理事長がご判断ください。</div>
   <div class="footer-line"></div>
   <div class="slide-num">17</div>
 </div>
@@ -380,10 +389,10 @@ p{ line-height:1.75; }
 <!-- 14 締め -->
 <div class="slide">
   <div class="label">CLOSING</div>
-  <h2>今日、組織の<span class="accent">1人目</span>が働き始めました</h2>
+  <h2>今日、組織の<span class="accent">1人目</span>を試作しました</h2>
   <p style="font-size:17px; margin-bottom:20px;">
-    フォルダと定義書1枚で部署が増やせることを、ご自身の手で確認いただきました。<br>
-    ここから毎月1部署ずつ、「使うほど育つ」組織にしていきます。
+    フォルダと定義書1枚で部署が増やせること、そして<b>検算と人の確認が誤りを拾えること</b>を、ご自身の手で確かめていただきました。<br>
+    ここから毎月1部署ずつ、<b>承認済みナレッジ基盤が一段ずつ厚くなる</b>組織にしていきます。
   </p>
   <div class="hl center" style="font-size:19px;">
     「守りは失点を防ぎ、攻めで2040年を越える」<br>
