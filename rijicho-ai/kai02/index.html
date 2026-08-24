@@ -13,7 +13,7 @@
   --mono:'SF Mono',Menlo,Consolas,monospace;
 }
 body{ font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
-  color:var(--ink); background:var(--bg); overflow:hidden; height:100vh; user-select:none; }
+  color:var(--ink); background:var(--bg); overflow:hidden; height:100vh; }
 .slide{ display:none; width:100vw; height:100vh; padding:52px 80px 76px;
   flex-direction:column; justify-content:center; position:relative; overflow:hidden; background:var(--bg); }
 .slide.active{ display:flex; animation:fadeUp .3s ease; }
@@ -48,8 +48,15 @@ p{ line-height:1.75; }
 .checklist li::before{ content:'✓'; position:absolute; left:0; color:var(--accent); font-weight:800; }
 .prompt{ background:var(--prompt-bg); color:var(--prompt-ink); border-radius:12px;
   padding:20px 26px; font-size:15.5px; line-height:1.9; margin:10px 0 14px; position:relative; }
+.prompt{ position:relative; padding-right:118px; }
 .prompt::before{ content:'💬 そのまま話しかけてください（読み上げでもコピペでもOK）';
   display:block; font-size:12px; letter-spacing:1px; font-family:var(--mono); color:#7fbfae; margin-bottom:10px; }
+.copy-btn{ position:absolute; top:14px; right:14px; background:#2f6d5c; color:#eafaf4;
+  border:1px solid #4b8f7c; border-radius:8px; padding:7px 15px; font-size:13px; font-weight:700;
+  font-family:inherit; cursor:pointer; transition:background .15s; z-index:5;
+  min-width:92px; text-align:center; }
+.copy-btn:hover{ background:#3d8a74; }
+.copy-btn.done{ background:#1d6b5a; border-color:#7fbfae; }
 .check{ background:var(--warn-bg); border:1px solid #e5cfa3; border-radius:10px; padding:12px 20px; font-size:14.5px; line-height:1.7; }
 .check b{ color:var(--warn); }
 .check::before{ content:'👀 できたかの確認 ― '; font-weight:700; color:var(--warn); }
@@ -79,6 +86,8 @@ p{ line-height:1.75; }
   *,*::before,*::after{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
   html,body{ width:1920px; overflow:visible; height:auto; }
   .nav{ display:none !important; }
+  .copy-btn{ display:none !important; }
+  .prompt{ padding-right:26px !important; }
   .slide{ display:flex !important; width:1920px !important; height:1080px !important;
     padding:76px 116px 104px !important; page-break-after:always; animation:none !important; }
 }
@@ -409,6 +418,29 @@ p{ line-height:1.75; }
 </div>
 
 <script>
+// 指示文にワンクリックのコピーボタンを設置
+document.querySelectorAll('.prompt').forEach(box => {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'コピー';
+  btn.onclick = async (e) => {
+    e.stopPropagation();
+    const clone = box.cloneNode(true);
+    clone.querySelectorAll('.copy-btn').forEach(x => x.remove());
+    clone.querySelectorAll('br').forEach(x => x.replaceWith('\n'));
+    const text = clone.textContent.split('\n').map(l => l.trim()).filter(l => l).join('\n');
+    try { await navigator.clipboard.writeText(text); }
+    catch (err) {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove();
+    }
+    btn.textContent = '\u2713 コピー'; btn.classList.add('done');
+    setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('done'); }, 1800);
+  };
+  box.appendChild(btn);
+});
+
 const slides = document.querySelectorAll('.slide');
 slides.forEach((s, i) => {
   const n = s.querySelector('.slide-num');
